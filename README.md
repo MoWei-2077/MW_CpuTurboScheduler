@@ -30,13 +30,13 @@ TODO:  <br>
 
 ## 常见问题
 Q：是否会对待机功耗产生负面影响？
-A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响 
-Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？
-A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点。CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗。如果后台应用的计算量很大，可能无法显著延长续航时间。可以通过 Scene 工具箱的进程管理器来定位问题。
-Q：何时更新 XXXX 版本？
-A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com
-Q：如何确保设备拥有 Perfmgr 内核模块？
-A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口
+A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响  <br>
+Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？ <br>
+A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题 <br>
+Q：何时更新 XXXX 版本？ <br>
+A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com <br>
+Q：如何确保设备拥有 Perfmgr 内核模块？ <br>
+A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 <br>
 
 ### 配置文件说明
 ### （一）元信息（meta）
