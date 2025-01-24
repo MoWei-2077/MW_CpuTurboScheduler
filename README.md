@@ -55,7 +55,7 @@ loglevel = "Debug"
 | configVersion | string   | 配置文件的版本号 |
 | loglevel | string   | 日志等级，可选值为 Debug、INFO、Warning、Error |
 ### (二) 附加功能 （function）
-```
+```ini
 [function]
 DisableQcomGpu = false
 AffintySetter = false
@@ -95,7 +95,7 @@ cpuctlUclampBoostMax = "70"
 | cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 |
 | cpuctlUclampBoostMax | bool   | CPU使用率控制的最大值 |
 
-###（四）I/O 设置（IO_Settings）
+### （四）I/O 设置（IO_Settings）
 ```ini
 [IO_Settings]
 Scheduler = "ssg"
