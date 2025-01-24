@@ -15,13 +15,13 @@ CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具，旨�
 2.可选的挡位有powersave balance performance fast四个挡位 <br>
 2.重启后查看/sdcard/Android/MW_CpuSpeedController/log.txt检查CS调度是否正常自启动
 
-### 情景模式切换
+#### 情景模式切换
 powersave（省电模式）：在保证基本流畅度的同时，尽可能降低功耗。推荐日常使用 <br>
 balance（均衡模式）：比原厂设置更流畅且更省电。推荐日常使用 <br>
 performance（性能模式）：在保证较高流畅度的同时，可能会增加功耗。推荐游戏使用 <br>
 fast（极速模式）：全力保证游戏时的流畅度，忽略能效比 
 
-### 负载采样
+## 负载采样
 通过对/proc/stat进行负载采样,获取以jiffies为单位的负载再通过计算转换为百分比的负载。 <br>
 TODO:  <br>
 声明:cerrFreq为当前频率 cerrLoad为当前负载 Magrin为余量 ReferenceFreq为基准频率 MaxFreq为最大频率 <br>
@@ -38,7 +38,7 @@ A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com <b
 Q：如何确保设备拥有 Perfmgr 内核模块？ <br>
 A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 <br>
 
-### 配置文件说明
+## 配置文件说明
 ### （一）元信息（meta）
 
 ```ini
