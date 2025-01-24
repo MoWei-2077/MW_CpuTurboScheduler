@@ -2,7 +2,7 @@
 [![C++](https://img.shields.io/badge/language-C++-%23f34b7d.svg?style=plastic)](https://en.wikipedia.org/wiki/C++)
 [![Android](https://img.shields.io/badge/platform-Android-0078d7.svg?style=plastic)](https://en.wikipedia.org/wiki/Android_(operating_system)) 
 [![AArch64](https://img.shields.io/badge/arch-AArch64-red.svg?style=plastic)](https://en.wikipedia.org/wiki/AArch64)
-[![Android Support8-15](https://img.shields.io/badge/Android%208-15-Support-green)](https://img.shields.io/badge/Android%208~15-Support-green)
+[![Android Support8-15](https://img.shields.io/badge/Android%208~15-Support-green)](https://img.shields.io/badge/Android%208~15-Support-green)
 #### 介绍
 CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具，旨在优化 Android 设备的 CPU 性能和功耗表现。通过智能调度算法，它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡。 <br>
 
