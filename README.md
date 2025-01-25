@@ -113,7 +113,7 @@ AdjIOScheduler = false
 ```ini
 [CoreAllocation]
 cpusetCore = "4-7"
-cpuctlUclampBoostMin = "10"
+cpuctlUclampBoostMin = "0"
 cpuctlUclampBoostMax = "70"
 ```
 | 字段名   | 数据类型 | 描述                                           |
