@@ -21,7 +21,10 @@ performance（性能模式）：在保证较高流畅度的同时，可能会增
 fast（极速模式）：全力保证游戏时的流畅度，忽略能效比 
 
 ## 负载采样
-通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 <br>
+通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 
+
+## 监听前台APP切换
+通过使用 inotify 对 /dev/cpuset/top-app/cgroup.procs 进行监听来获取顶层APP的切换 
 
 #### 公式说明：
 声明变量：
@@ -66,7 +69,7 @@ A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时S
 [meta]
 name = "骁龙7+ Gen2"
 author = MoWei
-configVersion = 4
+configVersion = 5
 loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -231,7 +234,7 @@ UclampBackGroundMax =  "50"
 
 ### 情景模式的切换
 ```
-在CS启动时会读取配置文件获取情景模式,在日志以如下方式体现：  
+在CPU Turbo Scheduler启动时会读取配置文件获取情景模式,在日志以如下方式体现：  
 [2025-01-05 17:43:28] INFO:均衡模式已启用
 ```
 `switchInode`对应路径的文件，监听新模式名称的写入完成模式切换：  
@@ -269,5 +272,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
-感谢所有用户的测试反馈 这将推进CS调度的开发
+感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
 ### 该文档更新于:2025/01/25 13:31
