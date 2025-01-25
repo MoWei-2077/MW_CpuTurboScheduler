@@ -45,8 +45,8 @@ A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器
 [meta]
 name = "骁龙7+ Gen2"
 author = MoWei
-configVersion = 1
-loglevel = "Debug"
+configVersion = 4
+loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
@@ -71,7 +71,7 @@ AdjIOScheduler = false
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| Disable_qcom_GpuBoost | bool   | 禁用高通 GPU Boost 防止 GPU 频率无序升高 | 
+| DisableQcomGpu | bool   | 禁用高通 GPU Boost 防止 GPU 频率无序升高 | 
 | AffintySetter | bool   | 对系统和传感器关键进程和线程进行绑核操作 |
 | cpuctl | bool   | CPU 使用率控制功能 |
 | ufsClkGate | bool   | 关闭UFS 时钟门功能（性能模式和极速模式下关闭 UFS 时钟门） |
@@ -82,7 +82,7 @@ AdjIOScheduler = false
 | EnableFeas | bool |  FEAS 功能（仅限极速模式）|
 | AdjIOScheduler | bool |  I/O 调度器调整以及I/O优化总开关 |
 
-### （三）核心分配CoreAllocation）
+### （三）核心分配 (CoreAllocation）
 ```ini
 [CoreAllocation]
 cpusetCore = "4-7"
@@ -147,8 +147,66 @@ background = "0-2"
 | system_background | string   | 系统后台进程可使用的 CPU 核心范围 |
 | backgroundd | string   | 后台进程可使用的 CPU 核心范围 |
 
-###  功耗模型开发(🕊)
+###  (八)功耗模型开发 (这里使用性能模式举例)
+```ini
+[performance]
+LoadBoost = false
+RefreshTopAppBoost = true
+Margin = "300000"
+up_rate_limit_ns = "3000"
+down_rate_limit_ns = "1000"
+modelType0 = "policy0"
+ReferenceFreq0 = "1804000"
+BoostFreq0 = "1804000"
+MaxFreq0 = "1804000"
+modelType1 = "policy4"
+ReferenceFreq1 = "2496000"
+BoostFreq1 = "2496000"
+MaxFreq1 = "2496000"
+modelType2 = "policy7"
+ReferenceFreq2 = "2476000"
+BoostFreq2 = "2702000" 
+MaxFreq2 = "2702000"
+scaling_governor = "walt"
+UclampTopAppMin = "0"
+UclampTopAppMax = "100"
+UclampTopApplatency_sensitive = true
+UclampForeGroundMin = "0"
+UclampForeGroundMax = "80"
+UclampBackGroundMin = "0"
+UclampBackGroundMax =  "50"
+```
+| 字段名   | 数据类型 | 描述                                           |
+| -------- | -------- | ---------------------------------------------- |
+| LoadBoost | bool   | 负载升频 |
+| RefreshTopAppBoost | bool   | 应用冷、热启动升频 |
+| Margin | string   | 余量 |
+| up_rate_limit_ns | int   | 下一次升频的间隔时间 |
+| down_rate_limit_ns | int   | 下一次降频的间隔时间 |
+| scaling_governor | string   | CPU0-7核心的调速器 |
+| UclampTopAppMin | string   | 用于设置顶层APP可使用的CPU频率下限 |
+| UclampTopAppMax | string   | 用于设置顶层APP可使用的CPU频率上限 |
+| UclampTopApplatency_sensitive | bool   | 标记应用或进程对延迟敏感性的参数 设置此参数可以告知调度器前台应用对延迟非常敏感 需要优先处理以减少响应时间 |
+| UclampForeGroundMin | string   | 用于设置前台APP可使用的CPU频率下限 |
+| UclampForeGroundMax | string   | 用于设置前台APP可使用的CPU频率上限 |
+| UclampBackGroundMin | string   | 用于设置后台APP可使用的CPU频率下限 |
+| UclampBackGroundMax | string  | 用于设置后台APP可使用的CPU频率上限 |
 
+### TODO: 以下为重点内容 
+声明: <br>
+举例modelTypeX X代表任何数字 modelTypeX代表CPUX簇 CS调度在对CPU簇进行更改时会读取modelType的参数饼进行字符串拼接 我们拿CPU2簇来举例:"/sys/devices/system/cpu/cpufreq/" + modelType2 <br>
+ReferenceFreqX 也时一样的 代表着CPUX簇的常规最大频率 <br>
+BoostFreX 代表CPUX簇负载达到临界值时 升级的频率 至于临界值可以看CS调度是如何进行负载采样的 <br>
+MaxFreqX 代表着最大频率 CS调度不会Boost到这个频率 这个频率是为了负载采样所填写的
+| 字段名   | 数据类型 | 描述                                           |
+| -------- | -------- | ---------------------------------------------- |
+| modelTypeX | string   | CPUX簇的定义 |
+| ReferenceFreqX | string   | CPUX簇的常规状态时最大频率 |
+| BoostFreqX | string   | CPUX簇能Boost到的最大频率 |
+| MaxFreqX | string   | CPUX簇的最大频率 |
+
+### 情景模式的切换
+```
 在CS启动时会读取配置文件获取情景模式,在日志以如下方式体现：  
 [2025-01-05 17:43:28] INFO:均衡模式已启用
 ```
@@ -158,6 +216,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 ```
 在日志以如下方式体现：
 [2025-01-05 17:43:28] INFO:均衡模式已启用
+
 ## 外围改进
 本模块除了CS调度本体的优化，还配合一些外围的改进共同提升用户使用体验。
   - Mi FEAS功能
@@ -170,6 +229,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - CPUIdle调度器调整
   - 关闭foreground boost
   - I/O优化
+  - 禁用大多数内核态和用户态boost、热插拔
   - schedtune.Boost置零
   - EAS调度器参数优化
   - 应用冷、热速度加快
