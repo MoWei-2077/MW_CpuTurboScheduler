@@ -33,7 +33,8 @@ fast（极速模式）：全力保证游戏时的流畅度，忽略能效比
 - Margin：余量
 - ReferenceFreq：基准频率
 - MaxFreq：最大频率
-公式:LoadBoostValue=(cerrFreq/cerrLoad)+Magrin <br>
+公式:<br>
+LoadBoostValue=(cerrFreq/cerrLoad)+Magrin <br>
 当 LoadBoostValue > ReferenceFreq 且 LoadBoostValue < MaxFreq 时，进行频率提升 <br>
 注意:ReferenceFreq为基准频率并不是最小频率！！！
 
