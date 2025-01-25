@@ -11,7 +11,7 @@ CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在�
 
 #### 修改启动时的默认模式
 1.打开/sdcard/Android/MW_CpuSpeedController/config.txt <br>
-2.可选择的模式包括 powersave（省电）、balance（均衡）、performance（性能）和 fast（极速）。
+2.可选择的模式包括 powersave（省电）、balance（均衡）、performance（性能）和 fast（极速）<br>
 3.重启后查看/sdcard/Android/MW_CpuSpeedController/log.txt检查CPU Turbo Scheduler是否正常自启动
 
 #### 情景模式切换
