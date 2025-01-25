@@ -23,7 +23,7 @@ fast（极速模式）：全力保证游戏时的流畅度，忽略能效比
 ## 负载采样
 通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 <br>
 
-### 公式说明：
+#### 公式说明：
 声明变量：
 - cerrFreq：当前频率
 - cerrLoad：当前负载
@@ -42,10 +42,10 @@ Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？
 A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题 
 
 Q：何时更新 XXXX 版本？ 
-A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com 
+A：如果您觉得有需要更新的内容，请发送至邮箱：mowei2077@gmail.com  
 
-Q：如何确保设备拥有 Perfmgr 内核模块？ 
-A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 
+Q：如何确保我的设备拥有并支持 Feas特性？ 
+A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 CPU Turbo Scheduler将会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 
 
 Q：是否还需要关闭系统的performance boost？  
 A：CPU Turbo Scheduler在初始化阶段就已经关闭了大部分主流的用户态和内核态升频 如果有非常规的升频需要用户自己关闭  
@@ -175,8 +175,8 @@ background = "0-2"
 LoadBoost = false
 RefreshTopAppBoost = true
 Margin = "300000"
-up_rate_limit_ns = "3000"
-down_rate_limit_ns = "1000"
+up_rate_limit_ms = "3000"
+down_rate_limit_ms = "1000"
 modelType0 = "policy0"
 ReferenceFreq0 = "1804000"
 BoostFreq0 = "1804000"
@@ -202,31 +202,32 @@ UclampBackGroundMax =  "50"
 | -------- | -------- | ---------------------------------------------- |
 | LoadBoost | bool   | 负载升频 |
 | RefreshTopAppBoost | bool   | 应用冷、热启动升频 |
-| Margin | string   | 余量 |
-| up_rate_limit_ns | int   | 下一次升频的间隔时间 |
-| down_rate_limit_ns | int   | 下一次降频的间隔时间 |
-| scaling_governor | string   | CPU0-7核心的调速器 |
-| UclampTopAppMin | string   | 用于设置顶层APP可使用的CPU频率下限 |
-| UclampTopAppMax | string   | 用于设置顶层APP可使用的CPU频率上限 |
+| Margin | string   | 负载升频的余量（单位：Hz） |
+| up_rate_limit_ms | int   | 下一次升频的间隔时间（单位：毫秒） |
+| down_rate_limit_ms | int   | 下一次降频的间隔时间（单位：毫秒） |
+| modelTypeX | string   | CPU X 簇的定义（例如 policy0、policy4 等） |
+| ReferenceFreqX | string   | CPU X 簇的常规最大频率（单位：Hz）） |
+| BoostFreqX | string   | CPU X 簇在负载达到临界值时提升到的频率（单位：Hz） |
+| MaxFreqX | string   | CPU X 簇的最大频率（单位：Hz），用于负载采样） |
+| scaling_governor | string   | CPU0-7核心的调速器模式 |
+| UclampTopAppMin | string   | 用于设置顶层APP可使用的CPU频率下限 （范围0-100）|
+| UclampTopAppMax | string   | 用于设置顶层APP可使用的CPU频率上限 （范围0-100）|
 | UclampTopApplatency_sensitive | bool   | 标记应用或进程对延迟敏感性的参数 设置此参数可以告知调度器前台应用对延迟非常敏感 需要优先处理以减少响应时间 |
-| UclampForeGroundMin | string   | 用于设置前台APP可使用的CPU频率下限 |
-| UclampForeGroundMax | string   | 用于设置前台APP可使用的CPU频率上限 |
-| UclampBackGroundMin | string   | 用于设置后台APP可使用的CPU频率下限 |
-| UclampBackGroundMax | string  | 用于设置后台APP可使用的CPU频率上限 |
+| UclampForeGroundMin | string   | 用于设置前台APP可使用的CPU频率下限 （范围0-100）|
+| UclampForeGroundMax | string   | 用于设置前台APP可使用的CPU频率上限 （范围0-100）|
+| UclampBackGroundMin | string   | 用于设置后台APP可使用的CPU频率下限 （范围0-100）|
+| UclampBackGroundMax | string   | 用于设置后台APP可使用的CPU频率上限 （范围0-100）|
 
-### TODO: 以下为重点内容 
-声明: <br>
-举例modelTypeX X代表任何数字 modelTypeX代表CPUX簇 CPU Turbo Scheduler在对CPU簇进行更改时会读取modelType的参数饼进行字符串拼接 我们拿CPU2簇来举例:"/sys/devices/system/cpu/cpufreq/" + modelType2 
-
-ReferenceFreqX 也时一样的 代表着CPUX簇的常规最大频率 <br>
-BoostFreX 代表CPUX簇负载达到临界值时 升级的频率 至于临界值可以看CS调度是如何进行负载采样的 <br>
-MaxFreqX 代表着最大频率 CPU Turbo Scheduler不会Boost到这个频率 这个频率是为了负载采样所填写的
-| 字段名   | 数据类型 | 描述                                           |
-| -------- | -------- | ---------------------------------------------- |
-| modelTypeX | string   | CPUX簇的定义 |
-| ReferenceFreqX | string   | CPUX簇的常规状态时最大频率 |
-| BoostFreqX | string   | CPUX簇能Boost到的最大频率 |
-| MaxFreqX | string   | CPUX簇的最大频率 |
+## TODO: 以下为重点内容 
+### 关于 CPU 簇的参数
+- modelTypeX：表示 CPU X 簇的定义 例如，modelType0 表示 CPU 0 簇
+- ReferenceFreqX：表示 CPU X 簇的常规最大频率 这是在正常负载下的目标频率
+- BoostFreqX：表示 CPU X 簇在负载达到临界值时提升到的频率 这是在高负载场景下为了保证性能而设置的频率
+- MaxFreqX：表示 CPU X 簇的最大频率 这是用于负载采样的频率上限 CPU Turbo Scheduler 不会将频率提升到此值以上
+### 参数拼接示例
+- CPU Turbo Scheduler 会根据 modelTypeX 的值动态拼接路径 例如:对于 CPU 2 簇：
+"/sys/devices/system/cpu/cpufreq/" + modelType2
+这样可以动态访问和调整不同 CPU 簇的频率参数
 
 ### 情景模式的切换
 ```
@@ -255,7 +256,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 禁用大多数内核态和用户态boost、热插拔
   - schedtune.Boost置零
   - EAS调度器参数优化
-  - 应用冷、热速度加快
+  - 顶层应用冷、热启动速度加快
 
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
@@ -269,4 +270,4 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 感谢所有用户的测试反馈 这将推进CS调度的开发
-### 该文档更新于:2025/01/24 22:54
+### 该文档更新于:2025/01/25 13:31
