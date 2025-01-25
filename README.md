@@ -4,16 +4,15 @@
 [![AArch64](https://img.shields.io/badge/arch-AArch64-red.svg?style=plastic)](https://en.wikipedia.org/wiki/AArch64)
 [![Android Support8-15](https://img.shields.io/badge/Android%208~15-Support-green)](https://img.shields.io/badge/Android%208~15-Support-green)
 #### 介绍
-CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具，旨在优化 Android 设备的 CPU 性能和功耗表现。通过智能调度算法，它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡。 <br>
-
+CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法，它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡。 <br>
 #### 工作条件
 1.目前该调度适用于Android8-15 <br>
 2.拥有Root权限
 
 #### 修改启动时的默认模式
 1.打开/sdcard/Android/MW_CpuSpeedController/config.txt <br>
-2.可选的挡位有powersave balance performance fast四个挡位 <br>
-2.重启后查看/sdcard/Android/MW_CpuSpeedController/log.txt检查CS调度是否正常自启动
+2.可选择的模式包括 powersave（省电）、balance（均衡）、performance（性能）和 fast（极速）。
+3.重启后查看/sdcard/Android/MW_CpuSpeedController/log.txt检查CPU Turbo Scheduler是否正常自启动
 
 #### 情景模式切换
 powersave（省电模式）：在保证基本流畅度的同时，尽可能降低功耗。推荐日常使用 <br>
@@ -22,21 +21,43 @@ performance（性能模式）：在保证较高流畅度的同时，可能会增
 fast（极速模式）：全力保证游戏时的流畅度，忽略能效比 
 
 ## 负载采样
-通过对/proc/stat进行负载采样,获取以jiffies为单位的负载再通过计算转换为百分比的负载。 <br>
-TODO:  <br>
-声明:cerrFreq为当前频率 cerrLoad为当前负载 Magrin为余量 ReferenceFreq为基准频率 MaxFreq为最大频率 <br>
-公式:LoadBoostValue=(cerrFreq/cerrLoad)+Magrin 当LoadBoostValue>ReferenceFreq且LoadBoostValue<MaxFreq时 进行Boost频率 <br>
-警告:ReferenceFreq为基准频率并不是最小频率！！！
+通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 <br>
+
+### 公式说明：
+声明变量：
+- cerrFreq：当前频率
+- cerrLoad：当前负载
+- Margin：余量
+- ReferenceFreq：基准频率
+- MaxFreq：最大频率
+公式:LoadBoostValue=(cerrFreq/cerrLoad)+Magrin <br>
+当 LoadBoostValue > ReferenceFreq 且 LoadBoostValue < MaxFreq 时，进行频率提升 <br>
+注意:ReferenceFreq为基准频率并不是最小频率！！！
 
 ## 常见问题
 Q：是否会对待机功耗产生负面影响？
-A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响  <br>
-Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？ <br>
-A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题 <br>
-Q：何时更新 XXXX 版本？ <br>
-A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com <br>
-Q：如何确保设备拥有 Perfmgr 内核模块？ <br>
-A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 <br>
+A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响  
+
+Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？ 
+A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题 
+
+Q：何时更新 XXXX 版本？ 
+A：如果您需要更新的内容，请发送至邮箱：mowei2077@gmail.com 
+
+Q：如何确保设备拥有 Perfmgr 内核模块？ 
+A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 调度器会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口 
+
+Q：是否还需要关闭系统的performance boost？  
+A：CPU Turbo Scheduler在初始化阶段就已经关闭了大部分主流的用户态和内核态升频 如果有非常规的升频需要用户自己关闭  
+
+Q：CPU Turbo Scheduler和Scene工具箱是什么关系？  
+A：这两个软件独立运作没有互相依赖 CPU Turbo Scheduler实现了接口可供Scene工具箱调用 例如性能模式切换以及分APP性能模式 如果不安装Scene工具箱也可以实现性能模式切换 
+
+Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler时开机需要重新开启开关 这是否意味着CPU Turbo Scheduler没有正常工作？  
+A：CPU Turbo Scheduler在系统解锁后就会正常自启动 CPU Turbo Scheduler不依赖于Scene工具箱 至于开机时需要重新打开调度开关请询问Scene工具箱的开发人员
+
+Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler后 会出现一堆切换模式的日志？  
+A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:我个人认为这样会造成不必要的性能资源消耗 所以我本人并不推荐大家使用Scene工具箱去接管任何调度
 
 ## 配置文件说明
 ### （一）元信息（meta）
@@ -54,6 +75,7 @@ loglevel = "INFO"
 | author   | string   | 配置文件的作者信息                             |
 | configVersion | string   | 配置文件的版本号 |
 | loglevel | string   | 日志等级，可选值为 Debug、INFO、Warning、Error |
+
 ### (二) 附加功能 （function）
 ```ini
 [function]
@@ -194,10 +216,11 @@ UclampBackGroundMax =  "50"
 
 ### TODO: 以下为重点内容 
 声明: <br>
-举例modelTypeX X代表任何数字 modelTypeX代表CPUX簇 CS调度在对CPU簇进行更改时会读取modelType的参数饼进行字符串拼接 我们拿CPU2簇来举例:"/sys/devices/system/cpu/cpufreq/" + modelType2 <br>
+举例modelTypeX X代表任何数字 modelTypeX代表CPUX簇 CPU Turbo Scheduler在对CPU簇进行更改时会读取modelType的参数饼进行字符串拼接 我们拿CPU2簇来举例:"/sys/devices/system/cpu/cpufreq/" + modelType2 
+
 ReferenceFreqX 也时一样的 代表着CPUX簇的常规最大频率 <br>
 BoostFreX 代表CPUX簇负载达到临界值时 升级的频率 至于临界值可以看CS调度是如何进行负载采样的 <br>
-MaxFreqX 代表着最大频率 CS调度不会Boost到这个频率 这个频率是为了负载采样所填写的
+MaxFreqX 代表着最大频率 CPU Turbo Scheduler不会Boost到这个频率 这个频率是为了负载采样所填写的
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
 | modelTypeX | string   | CPUX簇的定义 |
