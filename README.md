@@ -4,7 +4,7 @@
 [![AArch64](https://img.shields.io/badge/arch-AArch64-red.svg?style=plastic)](https://en.wikipedia.org/wiki/AArch64)
 [![Android Support8-15](https://img.shields.io/badge/Android%208~15-Support-green)](https://img.shields.io/badge/Android%208~15-Support-green)
 #### 介绍
-CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法，它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡。 <br>
+CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法 它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡 <br>
 #### 工作条件
 1.目前该调度适用于Android8-15 <br>
 2.拥有Root权限
@@ -120,7 +120,7 @@ cpuctlUclampBoostMax = "70"
 | -------- | -------- | ---------------------------------------------- |
 | cpusetCore | string   | 指定 CPUSet核心 用于核心分配 |
 | cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 |
-| cpuctlUclampBoostMax | bool   | CPU使用率控制的最大值 |
+| cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 |
 
 ### （四）I/O 设置（IO_Settings）
 ```ini
@@ -148,14 +148,14 @@ sched_schedstats = "0"
 | sched_wakeup_granularity_ns | string   | EAS 调度器调整任务唤醒时间的粒度 单位为纳秒（ns） |
 | sched_schedstats | string   | 是否启用调度统计信息收集(0表示禁用) |
 
-### （六）CPUIdle 调度器（CpuIdle）
+### （六）CpuIdle 调度器（CpuIdle）
 ```ini
 [CpuIdle]
 current_governor = "qcom-cpu-lpm"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| current_governor | string   | 设置使用的 CPUIdle 调度器模式，如高通推荐:qcom-cpu-lpm 联发科推荐:menu |
+| current_governor | string   | 设置使用的 CpuIdle 调度器模式 如高通推荐:qcom-cpu-lpm 联发科推荐:menu |
 
 ### （七）CPUSet 配置（Cpuset）
 ```ini
@@ -228,7 +228,7 @@ UclampBackGroundMax =  "50"
 - modelTypeX：表示 CPU X 簇的定义 例如，modelType0 表示 CPU 0 簇
 - ReferenceFreqX：表示 CPU X 簇的常规最大频率 这是在正常负载下的目标频率
 - BoostFreqX：表示 CPU X 簇在负载达到临界值时提升到的频率 这是在高负载场景下为了保证性能而设置的频率
-- MaxFreqX：表示 CPU X 簇的最大频率 这是用于负载采样的频率上限 CPU Turbo Scheduler 不会将频率提升到此值以上
+- MaxFreqX：表示 CPU X 簇的最大频率 这是用于负载采样的频率上限 CPU Turbo Scheduler 不会将频率提升到此值
 ### 参数拼接示例
 - CPU Turbo Scheduler 会根据 modelTypeX 的值动态拼接路径 例如:对于 CPU 2 簇：
 "/sys/devices/system/cpu/cpufreq/" + modelType2
