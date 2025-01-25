@@ -119,8 +119,8 @@ cpuctlUclampBoostMax = "70"
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
 | cpusetCore | string   | 指定 CPUSet核心 用于核心分配 |
-| cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 |
-| cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 |
+| cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 （范围0-100） |
+| cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 （范围0-100） |
 
 ### （四）I/O 设置（IO_Settings）
 ```ini
