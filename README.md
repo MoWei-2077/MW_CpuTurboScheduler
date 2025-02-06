@@ -6,7 +6,7 @@
 #### 介绍
 CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法 它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡 <br>
 #### 工作条件
-1.目前该调度适用于Android8-15 <br>
+1.目前该调度适用于Android9-15 <br>
 2.拥有Root权限
 
 #### 修改启动时的默认模式
@@ -220,7 +220,7 @@ down_rate_limit_ms = 1000
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| BasicFreq | string   | 常规频率）|
+| BasicFreq | string   | 常规频率 |
 | LowLoadFreq | string   | 低负载频率 |
 | HighLoadFreq | string   | 高负载频率 |
 | BoostFreq | string   | 临时高频 |
