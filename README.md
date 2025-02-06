@@ -15,10 +15,10 @@ CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在�
 3.重启后查看/sdcard/Android/MW_CpuSpeedController/log.txt检查CPU Turbo Scheduler是否正常自启动
 
 #### 情景模式切换
-powersave（省电模式）：在保证基本流畅度的同时，尽可能降低功耗。推荐日常使用 <br>
-balance（均衡模式）：比原厂设置更流畅且更省电。推荐日常使用 <br>
-performance（性能模式）：在保证较高流畅度的同时，可能会增加功耗。推荐游戏使用 <br>
-fast（极速模式）：全力保证游戏时的流畅度，忽略能效比 
+powersave（省电模式）：在保证基本流畅度的同时，尽可能降低功耗。推荐'待机'使用 <br>
+balance（均衡模式）：比原厂设置更流畅且更省电。推荐'日常'使用 <br>
+performance（性能模式）：在保证较高流畅度的同时，可能会增加功耗。推荐'需要短时间性能的场景'使用 <br>
+fast（极速模式）：全力保证游戏时的流畅度，忽略能效比，并没有任何'频率限制'并且所有核心将拉升至最高频率
 
 ## 负载采样
 通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 
@@ -267,8 +267,9 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 - [CoolAPK@shrairo](https://github.com/shrairo) <br>
 - QQ@长虹久奕
 - QQ@Microsoft
-  
+- 各位酷友以及CS调度的所有用户
 # 使用的开源项目
-- 暂无
-感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
+- 暂无 <br>
+
 ### 该文档更新于:2025/02/06 22:01
+- 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
