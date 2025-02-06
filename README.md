@@ -23,21 +23,31 @@ fast（极速模式）：全力保证游戏时的流畅度，忽略能效比
 ## 负载采样
 通过对 /proc/stat 进行负载采样 获取以 jiffies（时钟滴答）为单位的负载 并通过计算转换为百分比负载 
 
-## 监听前台APP切换
-通过使用 inotify 对 /dev/cpuset/top-app/cgroup.procs 进行监听来获取顶层APP的切换 
+## SchedTurbo调速器
+通过使用C++制造的用户态Boost调速器 通过对负载进行采样进行智能升降频
+#### SchedTurbo智能频率调节策略：
+1.高负载响应机制:
+- 当核心负载 ≥ HighLoad阈值时：
+- ① 立即将核心频率提升至HighLoadFreq基准档位
+- ② 维持up_rate_limit_ms时长后
+- ③ 升级至BoostFreq增强档位
+- ④ 再次维持up_rate_limit_ms时长
 
-#### 公式说明：
-声明变量：
-- cerrFreq：当前频率
-- cerrLoad：当前负载
-- Margin：余量
-- ReferenceFreq：基准频率
-- MaxFreq：最大频率
-- LoadBoostValue：Boost频率的临界值 <br>
-公式:<br>
-LoadBoostValue=(cerrFreq/cerrLoad)+Magrin <br>
-当 LoadBoostValue > ReferenceFreq 且 LoadBoostValue < MaxFreq 时，进行频率提升 <br>
-注意:ReferenceFreq为基准频率并不是最小频率！！！
+2.频率回退条件：
+- 若在BoostFreq阶段检测到负载回落至[LowLoad, HighLoad)区间时立即降频至BasicFreq基础档位
+  
+3.低负载优化机制:
+- 当核心负载 ≤ LowLoad阈值时：
+- ① 降频至LowLoadFreq节能档位
+- ② 持续保持down_rate_limit_ms时长
+- ③ 期间持续监测负载变化
+
+4.常规负载策略:
+- 当负载处于(LowLoad, HighLoad)中间区间时
+- 保持BasicFreq基础运行频率
+- 实时监测系统负载变化
+
+该方案通过500ms级细粒度负载采样 实现三级频率档位智能切换 在保证响应速度的同时优化能效表现 频率切换过程采用双参数控制机制 通过up_rate_limit_ms/down_rate_limit_ms独立设置升降频延迟 确保频率切换稳定性
 
 ## 常见问题
 Q：是否会对待机功耗产生负面影响？ <br>
@@ -69,14 +79,14 @@ A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时S
 
 ```ini
 [meta]
-name = "骁龙7+ Gen2"
+name = "CpuTurboScheduler"
 author = MoWei
-configVersion = 5
+configVersion = 7
 loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| name     | string   | 配置文件的名称，通常为设备型号                                 |
+| name     | string   | 配置文件的名称                                 |
 | author   | string   | 配置文件的作者信息                             |
 | configVersion | string   | 配置文件的版本号 |
 | loglevel | string   | 日志等级，可选值为 Debug、INFO、Warning、Error |
@@ -85,22 +95,20 @@ loglevel = "INFO"
 ```ini
 [function]
 DisableQcomGpu = false
-AffintySetter = false
-cpuctl = false
+AffintySetter = true
 ufsClkGate = false
-CpuIdleScaling_Governor = false
+CpuIdleScaling_Governor = true
 EasScheduler = false
-cpuset = false
-LoadBalancing = false
+cpuset = true
+LoadBalancing = true
 EnableFeas = false
-AdjIOScheduler = false
+AdjIOScheduler = true
 
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
 | DisableQcomGpu | bool   | 禁用高通 GPU Boost 防止 GPU 频率无序升高 | 
 | AffintySetter | bool   | 对系统和传感器关键进程和线程进行绑核操作 |
-| cpuctl | bool   | CPU 使用率控制功能 |
 | ufsClkGate | bool   | 关闭UFS 时钟门功能（性能模式和极速模式下关闭 UFS 时钟门） |
 | CpuIdleScaling_Governor | bool   | 自定义 CPUIdle 调度器。 |
 | EasScheduler | bool   | EAS 调度器优化 |
@@ -125,12 +133,12 @@ cpuctlUclampBoostMax = "70"
 ### （四）I/O 设置（IO_Settings）
 ```ini
 [IO_Settings]
-Scheduler = "ssg"
+Scheduler = ""
 IO_optimization = false
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| Scheduler | string   | 指定 I/O 调度器类型，如 ssg、bfq 等 |
+| Scheduler | string   | 指定 I/O 调度器类型，如 ssg、bfq 等 PS:该值为空时 将不会修改I/O调度器 |
 | IO_optimization | bool   | 启用 I/O 优化功能 |
 
 ### （五）EAS 调度器参数（EasSchedulerVaule）
@@ -151,7 +159,7 @@ sched_schedstats = "0"
 ### （六）CpuIdle 调度器（CpuIdle）
 ```ini
 [CpuIdle]
-current_governor = "qcom-cpu-lpm"
+current_governor = "menu"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
@@ -177,23 +185,7 @@ background = "0-2"
 ###  (八)功耗模型开发 (这里使用性能模式举例)
 ```ini
 [performance]
-LoadBoost = false
-RefreshTopAppBoost = true
-Margin = "300000"
-up_rate_limit_ms = "3000"
-down_rate_limit_ms = "1000"
-modelType0 = "policy0"
-ReferenceFreq0 = "1804000"
-BoostFreq0 = "1804000"
-MaxFreq0 = "1804000"
-modelType1 = "policy4"
-ReferenceFreq1 = "2496000"
-BoostFreq1 = "2496000"
-MaxFreq1 = "2496000"
-modelType2 = "policy7"
-ReferenceFreq2 = "2476000"
-BoostFreq2 = "2702000" 
-MaxFreq2 = "2702000"
+SchedTurbo_governor = true
 scaling_governor = "walt"
 UclampTopAppMin = "0"
 UclampTopAppMax = "100"
@@ -205,16 +197,7 @@ UclampBackGroundMax =  "50"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| LoadBoost | bool   | 负载升频 |
-| RefreshTopAppBoost | bool   | 应用冷、热启动升频 |
-| Margin | string   | 负载升频的余量（单位：Hz） |
-| up_rate_limit_ms | int   | 下一次升频的间隔时间（单位：毫秒） |
-| down_rate_limit_ms | int   | 下一次降频的间隔时间（单位：毫秒） |
-| modelTypeX | string   | CPU X 簇的定义（例如 policy0、policy4 等） |
-| ReferenceFreqX | string   | CPU X 簇的常规最大频率（单位：Hz）） |
-| BoostFreqX | string   | CPU X 簇在负载达到临界值时提升到的频率（单位：Hz） |
-| MaxFreqX | string   | CPU X 簇的最大频率（单位：Hz），用于负载采样） |
-| scaling_governor | string   | CPU0-7核心的调速器模式 |
+| SchedTurbo_governor | bool   | 在指定模式中开启SchedTurbo调速器 PS:该开关目前并无任何作用 |
 | UclampTopAppMin | string   | 用于设置顶层APP可使用的CPU频率下限 （范围0-100）|
 | UclampTopAppMax | string   | 用于设置顶层APP可使用的CPU频率上限 （范围0-100）|
 | UclampTopApplatency_sensitive | bool   | 标记应用或进程对延迟敏感性的参数 设置此参数可以告知调度器前台应用对延迟非常敏感 需要优先处理以减少响应时间 |
@@ -223,16 +206,28 @@ UclampBackGroundMax =  "50"
 | UclampBackGroundMin | string   | 用于设置后台APP可使用的CPU频率下限 （范围0-100）|
 | UclampBackGroundMax | string   | 用于设置后台APP可使用的CPU频率上限 （范围0-100）|
 
-## TODO: 以下为重点内容 
-### 关于 CPU 簇的参数
-- modelTypeX：表示 CPU X 簇的定义 例如，modelType0 表示 CPU 0 簇
-- ReferenceFreqX：表示 CPU X 簇的常规最大频率 这是在正常负载下的目标频率
-- BoostFreqX：表示 CPU X 簇在负载达到临界值时提升到的频率 这是在高负载场景下为了保证性能而设置的频率
-- MaxFreqX：表示 CPU X 簇的最大频率 这是用于负载采样的频率上限 CPU Turbo Scheduler 不会将频率提升到此值
-### 参数拼接示例
-- CPU Turbo Scheduler 会根据 modelTypeX 的值动态拼接路径 例如:对于 CPU 2 簇：
-"/sys/devices/system/cpu/cpufreq/" + modelType2
-这样可以动态访问和调整不同 CPU 簇的频率参数
+###  (九)SchedTurbo调参
+```ini
+[SchedTurboScheduler]
+BasicFreq = "2000000"
+LowLoadFreq = "1800000"
+HighLoadFreq = "2400000"
+BoostFreq = "2700000"
+HighLoad = 80
+LowLoad = 30
+up_rate_limit_ms = 500
+down_rate_limit_ms = 1000
+```
+| 字段名   | 数据类型 | 描述                                           |
+| -------- | -------- | ---------------------------------------------- |
+| BasicFreq | string   | 常规频率）|
+| LowLoadFreq | string   | 低负载频率 |
+| HighLoadFreq | string   | 高负载频率 |
+| BoostFreq | string   | 临时高频 |
+| HighLoad | int   | 高负载阈值 |
+| LowLoad | int   | 低负载阈值 |
+| up_rate_limit_ms | int   | 下一次升频时间 单位:MS |
+| down_rate_limit_ms | int   | 下一次降频时间 单位:MS |
 
 ### 情景模式的切换
 ```
@@ -271,8 +266,9 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 - [CoolAPK@Timeline](https://github.com/nep-Timeline) <br>
 - [CoolAPK@shrairo](https://github.com/shrairo) <br>
 - QQ@长虹久奕
+- QQ@Microsoft
   
 # 使用的开源项目
-[作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
+- 暂无
 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
-### 该文档更新于:2025/01/25 13:31
+### 该文档更新于:2025/02/06 22:01
