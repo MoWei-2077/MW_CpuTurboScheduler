@@ -6,7 +6,7 @@
 #### 介绍
 CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法 它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡 <br>
 #### 工作条件
-1.目前该调度适用于Android9-15 <br>
+1.目前该调度适用于Android8-15 <br>
 2.拥有Root权限
 
 #### 修改启动时的默认模式
@@ -27,28 +27,24 @@ fast（极速模式）：全力保证游戏时的流畅度，忽略能效比，�
 通过使用C++制造的用户态Boost调速器 通过对负载进行采样进行智能升降频
 #### SchedTurbo智能频率调节策略：
 1.高负载响应机制:
-- 当核心负载 ≥ HighLoad阈值时：
-- ① 立即将核心频率提升至HighLoadFreq基准档位
-- ② 维持up_rate_limit_ms时长后
-- ③ 升级至BoostFreq增强档位
-- ④ 再次维持up_rate_limit_ms时长
+- 当CPUX簇负载 ≥ 80%时：
+- ① 立即将CPUX簇的所有核心频率提升至GameFreq基准档位
+- ② 将频率时间维持在200ms后继续采样负载并对频率进行调整
 
 2.频率回退条件：
-- 若在BoostFreq阶段检测到负载回落至[LowLoad, HighLoad)区间时立即降频至BasicFreq基础档位
+- 若在高负载阶段检测到负载>65%时立即降频至MaximumFreq
   
 3.低负载优化机制:
-- 当核心负载 ≤ LowLoad阈值时：
-- ① 降频至LowLoadFreq节能档位
-- ② 持续保持down_rate_limit_ms时长
+- 当核心负载低于10%时:
+- ① 降频至CpuIdleFreq
 - ③ 期间持续监测负载变化
 
 4.常规负载策略:
-- 当负载处于(LowLoad, HighLoad)中间区间时
-- 保持BasicFreq基础运行频率
+- 当负载低于65%时:
+- 保持ReferenceFreq基础运行频率
 - 实时监测系统负载变化
 
-该方案通过500ms级细粒度负载采样 实现三级频率档位智能切换 在保证响应速度的同时优化能效表现 频率切换过程采用双参数控制机制 通过up_rate_limit_ms/down_rate_limit_ms独立设置升降频延迟 确保频率切换稳定性
-
+该方案通过40ms级细粒度负载采样 实现频率智能切换 在保证响应速度的同时优化能效表现 频率切换过程采用双参数控制机制 
 ## 常见问题
 Q：是否会对待机功耗产生负面影响？ <br>
 A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响   <br>
@@ -209,25 +205,20 @@ UclampBackGroundMax =  "50"
 ###  (九)SchedTurbo调参
 ```ini
 [SchedTurboScheduler]
-BasicFreq = "2000000"
-LowLoadFreq = "1800000"
-HighLoadFreq = "2400000"
-BoostFreq = "2700000"
-HighLoad = 80
-LowLoad = 30
-up_rate_limit_ms = 500
-down_rate_limit_ms = 1000
+ReferenceFreq = 1800000
+MaximumFrequency = 2400000
+CpuIdleFreq = 200
+GameFreq = 2147483647
+Detectioninterval_ms = 40
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| BasicFreq | string   | 常规频率 |
-| LowLoadFreq | string   | 低负载频率 |
-| HighLoadFreq | string   | 高负载频率 |
-| BoostFreq | string   | 临时高频 |
-| HighLoad | int   | 高负载阈值 |
-| LowLoad | int   | 低负载阈值 |
-| up_rate_limit_ms | int   | 下一次升频时间 单位:MS |
-| down_rate_limit_ms | int   | 下一次降频时间 单位:MS |
+| ReferenceFreq | int   | 常规频率 |
+| MaximumFrequency | int   | 较高负载频率 |
+| CpuIdleFreq | int   | 低负载/待机频率 |
+| GameFreq | int   | 极限频率 |
+| Detectioninterval_ms | int   | 检测间隔 |
+
 
 ### 情景模式的切换
 ```
@@ -271,5 +262,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 - 暂无 <br>
 
-### 该文档更新于:2025/02/06 22:01
+### 该文档更新于:2025/02/22 00:23
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
