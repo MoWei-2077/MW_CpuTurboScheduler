@@ -236,7 +236,9 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 禁用大多数内核态和用户态boost、热插拔
   - schedtune.Boost置零
   - EAS调度器参数优化
-  - 顶层应用冷、热启动速度加快
+  - 'DDR' 'LLCC' 'L3'参数优化
+  - I/O调速器优化
+  - "制裁"垃圾进程
 
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
