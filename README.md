@@ -57,6 +57,12 @@ A：进程列表:'kswapd''logd''kcompactd''magiskd''zygiskd'为防止这些进�
 Q：AffintySetter功能是否跟XX系统流畅度提升模块冲突  <br>
 A：冲突 目前CPU Turbo Scheduler会对一些系统关键进程进行绑核操作 所以不必使用此类模块  <br>
 
+Q：支不支持XXX内核？<br>
+A：目前CpuTurboScheduler支持大部分内核 举例4.4及以上的内核 <br> 
+
+Q：与'潘多拉''魔理沙'内核是否冲突？<br>
+A：目前CpuTurboScheduler仅在刷入'潘多拉'内核的设备上测试过 可以正常使用 <br> 
+
 ## 配置文件说明
 ### （一）元信息（meta）
 
@@ -242,8 +248,9 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 - QQ@长虹久奕
 - QQ@Microsoft
 - 各位酷友以及CS调度的所有用户
+- 
 # 使用的开源项目
 - 暂无 <br>
 
-### 该文档更新于:2025/02/22 00:23
+### 该文档更新于:2025/03/09 00:52
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
