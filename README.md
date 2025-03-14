@@ -18,7 +18,7 @@ CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在�
 - balance 均衡
 - performance 性能
 - fast 极速
-- 
+
 #### 日志等级
 - DEBUG 调试
 - INFO 信息
