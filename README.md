@@ -249,6 +249,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 'DDR' 'LLCC' 'L3'参数优化
   - I/O调速器优化
   - "制裁"垃圾进程
+  - 优化I/O延迟
 
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
