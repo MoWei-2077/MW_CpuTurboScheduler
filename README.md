@@ -36,10 +36,10 @@ Q：是否会对待机功耗产生负面影响？ <br>
 A：CPU Turbo Scheduler 做了低功耗优化 由于使用了 C++ 语言 自身运行功耗很低 并不会对设备的待机功耗产生显著影响   <br>
  
 Q：为什么使用了 CPU Turbo Scheduler 后功耗仍然很高？  <br> 
-A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题  <br>
+A：SOC 的 AP 部分功耗主要取决于计算量和使用的频点 CPU Turbo Scheduler 只能通过控制性能释放和改进频率的方式来降低功耗 如果后台应用的计算量很大 可能无法显著延长续航时间 可以通过 Scene 工具箱的进程管理器来定位问题  PS:建议全局测试时间不低于一小时 否则属于瞬时功耗 瞬时功耗不具有任何参考价值 <br>
 
 Q：何时更新 XXXX 版本？  <br>
-A：如果您觉得有需要更新的内容，请发送至邮箱：mowei2077@gmail.com   <br>
+A：如果您觉得有需要更新的内容，请发送至邮箱：mowei2077@gmail.com PS:作者每周都会查看谷歌邮箱考虑是否需要实现某些功能 <br>
 
 Q：如何确保我的设备拥有并支持 Feas特性？  <br>
 A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 CPU Turbo Scheduler将会自动识别内核的 Feas 接口 如果设备没有 Feas 功能接口 将会在日志中抛出错误 目前CPU Turbo Scheduler 已接入大多数内核的 Feas 接口  <br>
@@ -54,25 +54,32 @@ Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler时开机需要重�
 A：CPU Turbo Scheduler在系统解锁后就会正常自启动 CPU Turbo Scheduler不依赖于Scene工具箱 至于开机时需要重新打开调度开关请询问Scene工具箱的开发人员<br>
 
 Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler后 会出现一堆切换模式的日志？  <br>
-A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:我个人认为这样会造成不必要的性能资源消耗 所以我本人并不推荐大家去使用Scene工具箱去接管任何调度 <br>
+A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:虽然性能开销很低 但我个人认为这样会造成不必要的性能开销 所以我本人并不推荐大家去使用Scene工具箱去接管任何调度 <br>
 
 Q：RubbishProcess指的是什么进程？ <br>
-A：进程列表:'kswapd''logd''kcompactd''magiskd''zygiskd'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-2核心  <br>
+A：进程列表:'kswapd''logd''kcompactd''magiskd''zygiskd''init'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-2核心  <br>
 
 Q：AffintySetter功能是否跟XX系统流畅度提升模块冲突  <br>
 A：冲突 目前CPU Turbo Scheduler会对一些系统关键进程进行绑核操作 所以不必使用此类模块  <br>
 
 Q：AffintySetter功能是否跟Scene工具箱的核心分配或A-SOUL模块冲突？  <br>
-A：不冲突AffintySetter功能只会调整系统关键进程和线程的核心 而核心分配和A-SOUL模块则是调整应用的进程和线程的核心 所以并不冲突  <br>
+A：不冲突 AffintySetter功能只会调整系统关键进程和线程的核心 而核心分配和A-SOUL模块则是调整应用的进程和线程的核心 所以并不冲突  <br>
 
 Q：支不支持XXX内核？<br>
 A：目前CpuTurboScheduler支持大部分内核 举例4.4及以上的内核 <br> 
 
 Q：与'潘多拉''魔理沙'内核是否冲突？<br>
-A：目前CpuTurboScheduler仅在刷入'潘多拉'内核的设备上测试过 可以正常使用 但CS调度并未适配这些内核提供的Feas接口 <br> 
+A：目前CpuTurboScheduler仅在刷入'潘多拉'内核的设备上测试过 可以使用但可能会导致某些核心的最大频率异常 PS:CS调度并未适配这些内核提供的Feas接口 <br> 
 
 Q：切换情景模式后是否需要重启？<br>
 A：不需要 目前CpuTurboScheduler会监听情景模式的配置变化进行切换 <br> 
+
+Q：应用启动加速的频率是多少？<br>
+A：应用启动加速会对不同的核心写入'SmallCoreMaxFreq' 'MediumCoreMaxFreq' 'BigCoreMaxFreq' 'SuperBigCoreMaxFreq'的1.25倍 PS:举例冷启动时将小核的频率拉升至'SmallCoreMaxFreq' 以此类推
+
+Q：如何获取并正确填写'SmallCorePath''MediumCorePath''BigCorePath''SuperBigCorePath'<br> 
+A：可自行查看"/sys/devices/system/cpu/cpufreq/"文件夹 获取对应的policyX PS:X代表0-7的数字 将数字填写到对应的分支即可 举例有三个policyX文件夹 第一个是policy0就在'SmallCorePath'中填写0 第二个是policy4就在'MediumCorePath'中填写4 第三个是policy7就在'BigCorePath'中填写7 最终结果: SmallCorePath = 0 MediumCorePath = 4 BigCorePath = 7 PS:调整完后可以自定义这些核心的频率或者使用配置文件本身的默认值 但不推荐使用默认值  调整完后可以不用重启设备 只需要切换情景模式即可 <br> 
+
 ## 配置文件说明
 ### （一）元信息（meta）
 
@@ -80,7 +87,7 @@ A：不需要 目前CpuTurboScheduler会监听情景模式的配置变化进行�
 [meta]
 name = "CpuTurboScheduler正式版模型"
 author = MoWei
-configVersion = 10
+configVersion = 13
 loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -101,6 +108,7 @@ cpuset = true
 LoadBalancing = true
 EnableFeas = false
 AdjIOScheduler = true
+AppLaunchBoost = true
 
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -113,8 +121,9 @@ AdjIOScheduler = true
 | LoadBalancing | bool | 通过优化CFS调度器的参数达到负载均衡的效果 |
 | EnableFeas | bool |  FEAS 功能（仅限极速模式）|
 | AdjIOScheduler | bool |  I/O 调度器调整以及I/O优化总开关 |
+| AppLaunchBoost | bool |  APP启动加速 PS:在启动应用时对CPU0-7核心进行时长为1.2S的升频 无论是热启动或冷启动 频率可看上面的QA |
 
-### （三）核心分配参数 (CoreAllocation）
+### （三）核心分配参数 （CoreAllocation）
 ```ini
 [CoreAllocation]
 cpusetCore = "4-7"
@@ -127,7 +136,23 @@ cpuctlUclampBoostMax = "100"
 | cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 （范围0-100） |
 | cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 （范围0-100） |
 
-### （四）I/O 设置（IO_Settings）
+### （四）核心架构参数 （CoreFramework）
+##### 如果觉得这部分比较复杂 可以看上面的QA
+```ini
+[CoreFramework]
+SmallCorePath = 0
+MediumCorePath = 4
+BigCorePath = 0
+SuperBigCorePath = 0
+```
+| 字段名   | 数据类型 | 描述                                           |
+| -------- | -------- | ---------------------------------------------- |
+| SmallCorePath | int   | 代指小核的CPU路径 |
+| MediumCorePath | int   | 代指中核的CPU路径 |
+| BigCorePath | int   | 代指大核的CPU路径 |
+| SuperBigCorePath | int   | 代指超大核的CPU路径 |
+
+### （五）I/O 设置（IO_Settings）
 ```ini
 [IO_Settings]
 Scheduler = ""
@@ -138,7 +163,7 @@ IO_optimization = false
 | Scheduler | string   | 指定 I/O 调度器类型，如 ssg、bfq 等 PS:该值为空时 将不会修改I/O调度器 |
 | IO_optimization | bool   | 启用 I/O 优化功能 |
 
-### （五）QcomBus 参数优化（Other）
+### （六）QcomBus 参数优化（Other）
 ```ini
 [Other]
 AdjQcomBus_dcvs = false
@@ -147,7 +172,7 @@ AdjQcomBus_dcvs = false
 | -------- | -------- | ---------------------------------------------- |
 | AdjQcomBus_dcvs | bool   | 优化QCOM设备'DDR''LLCC''DDRQOS''L3'参数 PS:目前该功能在7GEN2+设备上使用最佳 |
 
-### （六）EAS 调度器参数（EasSchedulerVaule）
+### （七）EAS 调度器参数（EasSchedulerVaule）
 ```ini
 [EasSchedulerVaule]
 sched_min_granularity_ns = "2000000" 
@@ -162,7 +187,7 @@ sched_schedstats = "0"
 | sched_wakeup_granularity_ns | string   | EAS 调度器调整任务唤醒时间的粒度 单位为纳秒（ns） |
 | sched_schedstats | string   | 是否启用调度统计信息收集(0表示禁用) |
 
-### （七）CpuIdle 调度器（CpuIdle）
+### （八）CpuIdle 调度器（CpuIdle）
 ```ini
 [CpuIdle]
 current_governor = ""
@@ -171,7 +196,7 @@ current_governor = ""
 | -------- | -------- | ---------------------------------------------- |
 | current_governor | string   | 设置使用的 CpuIdle 调度器模式 如高通推荐:qcom-cpu-lpm 联发科推荐:menu PS:此值为空等于不调整 |
 
-### （八）CPUSet 配置（Cpuset）
+### （九）CPUSet 配置（Cpuset）
 ```ini
 [Cpuset]
 top_app = "0-7"
@@ -188,20 +213,22 @@ background = "0-2"
 | system_background | string   | 系统后台进程可使用的 CPU 核心范围 |
 | backgroundd | string   | 后台进程可使用的 CPU 核心范围 |
 
-###  (九)功耗模型开发 (这里使用性能模式举例)
+###  (十)功耗模型开发 (这里使用性能模式举例)
 ```ini
 [performance]
 scaling_governor = "schedutil"
-UclampTopAppMin = "10"
+UclampTopAppMin = "0"
 UclampTopAppMax = "100"
 UclampTopApplatency_sensitive = "1"
 UclampForeGroundMin = "0"
 UclampForeGroundMax = "80"
 UclampBackGroundMin = "0"
 UclampBackGroundMax =  "50"
-MinFreqLimit = "1800000"
-MaxFreq = "2500000" 
-ufsClkGate = true
+SmallCoreMaxFreq = 10000
+MediumCoreMaxFreq = 2500
+BigCoreMaxFreq = 2700
+SuperBigCoreMaxFreq = 2700
+ufsClkGate = false
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
@@ -213,8 +240,10 @@ ufsClkGate = true
 | UclampForeGroundMax | string   | 用于设置前台APP可使用的CPU频率上限 （范围0-100）|
 | UclampBackGroundMin | string   | 用于设置后台APP可使用的CPU频率下限 （范围0-100）|
 | UclampBackGroundMax | string   | 用于设置后台APP可使用的CPU频率上限 （范围0-100）|
-| MinFreqLimit | string   | 用于设置0-8核心的最小频率 |
-| MaxFreq | string   | 用于设置0-8核心的最大频率 |
+| SmallCoreMaxFreq | int   | 用于设置小核的CPU最大频率 （范围0-10000） |
+| MediumCoreMaxFreq | int   | 用于设置中核的CPU最大频率 （范围0-10000） |
+| BigCoreMaxFreq | int   | 用于设置大核的CPU最大频率 （范围0-10000） |
+| SuperBigCoreMaxFreq | int   | 用于设置超大核的CPU最大频率 （范围0-10000）|
 | ufsClkGate | string   | 用于设置UFS时钟门 |
 
 
@@ -250,7 +279,8 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - I/O调速器优化
   - "制裁"垃圾进程
   - 优化I/O延迟
-
+  - 优化I/O预读写速度
+  - 频率分簇
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
 - [CoolAPK@hfdem](https://github.com/hfdem) <br>
@@ -264,5 +294,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 - 暂无 <br>
 
-### 该文档更新于:2025/03/10 07:15
+### 该文档更新于:2025/04/18 19:46
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
