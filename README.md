@@ -60,10 +60,10 @@ Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler后 会出现一堆
 A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:虽然性能开销很低 但我个人认为这样会造成不必要的性能开销 所以我本人并不推荐大家去使用Scene工具箱去接管任何调度 <br>
 
 Q：RubbishProcess指的是什么进程？ <br>
-A：进程列表:'logd' 'mdnsd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-2核心  <br>
+A：进程列表:'logd' 'mdnsd' 'kswapd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-2核心  <br>
 
 Q：AffintySetter功能优化了什么进程？ <br>
-A：进程列表:'com.android.systemui''surfaceflinger' 'system_server''android:ui''providers.media' <br>
+A：进程列表:'com.android.systemui' 'surfaceflinger' 'system_server' 'android:ui' 'providers.media' <br>
 
 Q：AffintySetter功能是否跟XX系统流畅度提升模块冲突  <br>
 A：冲突 目前CPU Turbo Scheduler会对一些系统关键进程进行绑核操作 所以不必使用此类模块  <br>
@@ -74,7 +74,7 @@ A：不冲突 AffintySetter功能只会调整系统关键进程和线程的核�
 Q：支不支持XXX内核？<br>
 A：目前CpuTurboScheduler支持大部分内核 举例4.4及以上的内核 <br> 
 
-Q：与'潘多拉''魔理沙'内核是否冲突？<br>
+Q：与'潘多拉' '魔理沙'内核是否冲突？<br>
 A：目前CpuTurboScheduler仅在刷入'潘多拉'内核的设备上测试过 可以使用但可能会导致某些核心的最大频率异常 PS:CS调度并未适配这些内核提供的Feas接口 <br> 
 
 Q：切换情景模式后是否需要重启？<br>
@@ -358,7 +358,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 - QQ@Microsoft
 - 各位酷友以及CS调度的所有用户
 # 使用的开源项目
-- 暂无 <br>
+[作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
 ### 该文档更新于:2025/07/18 16:18
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
