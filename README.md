@@ -60,7 +60,7 @@ Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler后 会出现一堆
 A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:虽然性能开销很低 但我个人认为这样会造成不必要的性能开销 所以我本人并不推荐大家去使用Scene工具箱去接管任何调度 <br>
 
 Q：RubbishProcess指的是什么进程？ <br>
-A：进程列表:'logd' 'mdnsd' 'kswapd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-2核心  <br>
+A：进程列表:'logd' 'mdnsd' 'kswapd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到1-2核心  <br>
 
 Q：AffintySetter功能优化了什么进程？ <br>
 A：进程列表:'com.android.systemui' 'surfaceflinger' 'system_server' 'android:ui' 'providers.media' <br>
@@ -360,5 +360,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
-### 该文档更新于:2025/07/18 16:18
+### 该文档更新于:2025/07/19 10:55
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
