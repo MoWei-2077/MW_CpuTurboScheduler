@@ -81,8 +81,12 @@ Q：切换情景模式后是否需要重启？<br>
 A：不需要 目前CpuTurboScheduler会监听情景模式的配置变化进行切换 <br> 
 
 Q：如何获取并正确填写'SmallCorePath''MediumCorePath''BigCorePath''SuperBigCorePath'<br> 
-A：可自行查看"/sys/devices/system/cpu/cpufreq/"文件夹 获取对应的policyX PS:X代表0-7的数字 将数字填写到对应的分支即可 举例有三个policyX文件夹 第一个是policy0就在'SmallCorePath'中填写0 第二个是policy4就在'MediumCorePath'中填写4 第三个是policy7就在'BigCorePath'中填写7 最终结果: SmallCorePath = 0 MediumCorePath = 4 BigCorePath = 7 PS:调整完后可以自定义这些核心的频率或者使用配置文件本身的默认值 但不推荐使用默认值  调整完后可以不用重启设备 只需要切换情景模式即可 <br> 
+A：可自行查看"/sys/devices/system/cpu/cpufreq/"文件夹 获取对应的policyX PS:X代表0-7的数字 将数字填写到对应的分支即可 <br> 
+举例有三个policyX文件夹 第一个是policy0就在'SmallCorePath'中填写0 第二个是policy4就在'MediumCorePath'中填写4 第三个是policy7就在'BigCorePath'中填写7 <br> 
+最终结果: SmallCorePath = 0 MediumCorePath = 4 BigCorePath = 7 PS:调整完后可以自定义这些核心的频率或者使用配置文件本身的默认值 但不推荐使用默认值  调整完后可以不用重启设备 只需要切换情景模式即可 <br> 
 
+Q: 调速器参数是什么东西?
+A: 这是Scheduler中的一些参数 这些设置将影响你的流畅度体验或续航 它的路径位于'/sys/devices/system/cpu/cpufreq/policyX/walt/' 
 ## 配置文件说明
 ### （一）元信息（meta）
 
