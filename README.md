@@ -47,6 +47,9 @@ A：开启 CPU Turbo Scheduler 的 Feas 开关并切换到极速模式 CPU Turbo
 Q：是否还需要关闭系统的performance boost？  <br>
 A：CPU Turbo Scheduler在初始化阶段就已经关闭了大部分主流的用户态和内核态升频 如果有非常规的升频需要用户自己关闭  <br>
 
+Q：是否需要手动调整EAS调度器或CFS调度器？  <br>
+A：不需要 根据研究发现当启用了EAS调度器一个线程或进程负载达到了一定的阈值时该进程将会由CFS调度器或者RT调度器来接管  <br>
+
 Q：是否还需要使用第三方的屏蔽官调模块？  <br>
 A：CPU Turbo Scheduler在初始化阶段就已经关闭了'miuibooster' 'miperf' 'migt' 'game_opt' 'fpsgo'等 一般不需要使用其他模块进行干扰<br>
 
@@ -60,10 +63,13 @@ Q：为什么在使用Scene工具箱接管CPU Turbo Scheduler后 会出现一堆
 A：因为Scene工具箱会一直监听屏幕是否亮屏和息屏 当亮屏时Scene工具箱会切换一次模式 CPU Turbo Scheduler监听到模式更改后就会输出一次日志并写入一些相关的参数 PS:虽然性能开销很低 但我个人认为这样会造成不必要的性能开销 所以我本人并不推荐大家去使用Scene工具箱去接管任何调度 <br>
 
 Q：RubbishProcess指的是什么进程？ <br>
-A：进程列表:'logd' 'mdnsd' 'kswapd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到1-2核心  <br>
+A：进程列表:'logd' 'mdnsd' 'kswapd' 'kcompactd' 'magiskd' 'zygiskd' 'init' 'logcat'为防止这些进程占用过高的CPU导致异常耗电 所以默认将这些进程绑定到0-1核心  <br>
 
 Q：AffintySetter功能优化了什么进程？ <br>
 A：进程列表:'com.android.systemui' 'surfaceflinger' 'system_server' 'android:ui' 'providers.media' <br>
+
+Q：AffintySetter功能基于什么实现的? <br>
+A：AffintySetter目前是通过sched.h头文件中的sched_setaffinity函数实现 该实现方法并没有cpuset的一样约束力 但是能尽量避免异常卡顿  <br>
 
 Q：AffintySetter功能是否跟XX系统流畅度提升模块冲突  <br>
 A：冲突 目前CPU Turbo Scheduler会对一些系统关键进程进行绑核操作 所以不必使用此类模块  <br>
@@ -350,6 +356,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 优化I/O预读写速度
   - 频率分簇
   - 优化CPU调速器
+  - sched_setaffinity优化
   
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
@@ -364,5 +371,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
-### 该文档更新于:2025/07/19 10:55
+### 该文档更新于:2025/07/28 23:28
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
