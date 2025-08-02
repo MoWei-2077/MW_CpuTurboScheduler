@@ -142,13 +142,13 @@ LaunchBoost = true
 [LaunchBoost]
 BoostRateMs = 1200
 FreqMulti = 1.25
-cpuctlUclampBoostMax = "100"
+UclampTopAppBoostMin = 10
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| BoostRateMs | int   | Boost 的持续时间|
+| BoostRateMs | float   | Boost 的持续时间|
 | FreqMulti | int   | Boost 的频率倍数 |
-| cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 （范围0-100） |
+| UclampTopAppBoostMin | int   | 控制前台应用占用CPU的最小值 （范围0-100） |
 
 
 ### （四）核心分配参数 （CoreAllocation）
