@@ -7,16 +7,17 @@ data = now.strftime("%Y%m%d")
 time = now.strftime("%Y %m %d: %H:%M:%S")
 clang = "D:/Android-NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe"
 sysroot = "--sysroot=D:/Android-NDK/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
-cppFlags = "--target=aarch64-linux-android27 -std=c++17 -static -s -O3 -flto -funroll-loops -frtti -fexceptions -finline-functions -fomit-frame-pointer -Wall -Wextra -Wshadow -fPIE"
+cppFlags = "--target=aarch64-linux-android27 -std=c++23 -static -s -O3 -flto -fno-exceptions -ffast-math -funroll-loops -frtti -fexceptions -finline-functions -fomit-frame-pointer -Wall -Wextra -Wshadow -fPIE"
 cppFlags_list = cppFlags.split()
 prop = "./magisk/module.prop"
+Project = "C://Users//Administrator//Desktop//项目//C++开发//CS调度"
 new_version_code = random.randint(20250308, 20991231)  
 
 def log (LogMessage) :
     print(time, LogMessage)
 
 def build ():
-    command = [clang, sysroot] + cppFlags_list + ["-I.", "./src/main.cpp", "-o", "./MW_CpuSpeedController"]
+    command = [clang, sysroot] + cppFlags_list + ["-I.", Project + "/src/main.cpp", "-o", Project + "/magisk/MW_CpuSpeedController"]
     if (subprocess.run(command)) :
         log("Release 版本编译成功!")
     else :
