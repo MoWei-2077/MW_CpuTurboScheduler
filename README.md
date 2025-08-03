@@ -100,7 +100,7 @@ A: 这是Scheduler中的一些参数 这些设置将影响你的流畅度体验�
 [meta]
 name = "CpuTurboScheduler正式版模型"
 author = MoWei
-configVersion = 15
+configVersion = 16
 loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -371,5 +371,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
-### 该文档更新于:2025/07/28 23:28
+### 该文档更新于:2025/08/03 17:50
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
