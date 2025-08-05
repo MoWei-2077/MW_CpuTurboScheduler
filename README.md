@@ -154,12 +154,14 @@ UclampTopAppBoostMin = 10
 ### （四）核心分配参数 （CoreAllocation）
 ```ini
 [CoreAllocation]
+sparePlan = false
 cpusetCore = "4-7"
 cpuctlUclampBoostMin = "0"
 cpuctlUclampBoostMax = "100"
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
+| sparePlan | bool   | 该开关开启后将使用cpuset和cpuctl强制约束核心绑定 可能会导致异常卡顿 |
 | cpusetCore | string   | 指定 CPUSet核心 用于核心分配 |
 | cpuctlUclampBoostMin | string   | CPU使用率控制的最小值 （范围0-100） |
 | cpuctlUclampBoostMax | string   | CPU使用率控制的最大值 （范围0-100） |
@@ -170,7 +172,7 @@ cpuctlUclampBoostMax = "100"
 [CoreFramework]
 SmallCorePath = 0
 MediumCorePath = 4
-BigCorePath = 0
+BigCorePath = 7
 SuperBigCorePath = 0
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -188,7 +190,7 @@ IO_optimization = false
 ```
 | 字段名   | 数据类型 | 描述                                           |
 | -------- | -------- | ---------------------------------------------- |
-| Scheduler | string   | 指定 I/O 调度器类型，如 ssg、bfq 等 PS:该值为空时 将不会修改I/O调度器 |
+| Scheduler | string   | 指定 I/O 调度器类型，如 ssg bfq 等 PS:该值为空时 将不会修改I/O调度器 |
 | IO_optimization | bool   | 启用 I/O 优化功能 |
 
 ### （七）QcomBus 参数优化（Other）
@@ -293,11 +295,16 @@ CPUllccmin = 0
 CPUllccmax = 0
 CPUddrmin = 0
 CPUddrmax = 0
+SmallCoreMinFreq = 0
+MediumCoreMinFreq = 0
+BigCoreMinFreq = 0
+SuperBigCoreMinFreq = 0
 SmallCoreMaxFreq = 10000
 MediumCoreMaxFreq = 2500
 BigCoreMaxFreq = 2700
 SuperBigCoreMaxFreq = 2700
 ufsClkGate = false
+NetWorkOpt = false
 ParamSchedX = 0
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -314,13 +321,17 @@ ParamSchedX = 0
 | CPUllccmax | int   | 用于设置llcc最大频率 （范围:频率表最小频率-最大频率）|
 | CPUddrmin | int   | 用于设置ddr最小频率 （范围:频率表最小频率-最大频率）|
 | CPUddrmax | int   | 用于设置ddr最大频率 （范围:频率表最小频率-最大频率）|
+| SmallCoreMinFreq | int   | 用于设置小核的CPU最小频率 （范围:频率表最小频率-最大频率） |
+| MediumCoreMinFreq | int   | 用于设置中核的CPU最小频率 （范围:频率表最小频率-最大频率） |
+| BigCoreMinFreq | int   | 用于设置大核的CPU最小频率 （范围:频率表最小频率-最大频率） |
+| SuperBigCoreMinFreq | int   | 用于设置超大核的CPU最小频率 （范围:频率表最小频率-最大频率）|
 | SmallCoreMaxFreq | int   | 用于设置小核的CPU最大频率 （范围:频率表最小频率-最大频率） |
 | MediumCoreMaxFreq | int   | 用于设置中核的CPU最大频率 （范围:频率表最小频率-最大频率） |
 | BigCoreMaxFreq | int   | 用于设置大核的CPU最大频率 （范围:频率表最小频率-最大频率） |
 | SuperBigCoreMaxFreq | int   | 用于设置超大核的CPU最大频率 （范围:频率表最小频率-最大频率）|
-| ParamSchedX | int   | 用于设定调速器附加参数 |
 | ufsClkGate | string   | 用于设置UFS时钟门 |
-
+| NetWorkOpt | string   | 通过优化内核参数 提高CPU使用率 降低网络延迟 |
+| ParamSchedX | int   | 用于设定调速器附加参数 |
 
 ### 情景模式的切换
 ```
@@ -357,6 +368,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 频率分簇
   - 优化CPU调速器
   - sched_setaffinity优化
+  - 网络优化
   
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
@@ -371,5 +383,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
-### 该文档更新于:2025/08/03 17:50
+### 该文档更新于:2025/08/05 11:00
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
