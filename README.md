@@ -6,7 +6,7 @@
 #### 介绍
 CPU Turbo Scheduler 是一款基于 C++ 编写的智能 CPU 调度工具 旨在优化 Android 设备的 CPU 性能和功耗表现而设计 通过智能调度算法 它可以根据不同的使用场景动态调整 CPU 频率以达到最佳的性能和能效平衡 <br>
 #### 工作条件
-1.目前该调度适用于ARM64平台的Android8-15 <br>
+1.目前该调度适用于ARM64平台的Android8-16 <br>
 2.拥有Root权限
 
 #### 修改启动时的默认模式
@@ -51,7 +51,7 @@ Q：是否需要手动调整EAS调度器或CFS调度器？  <br>
 A：不需要 根据研究发现当启用了EAS调度器一个线程或进程负载达到了一定的阈值时该进程将会由CFS调度器或者RT调度器来接管  <br>
 
 Q：是否还需要使用第三方的屏蔽官调模块？  <br>
-A：CPU Turbo Scheduler在初始化阶段就已经关闭了'miuibooster' 'miperf' 'migt' 'game_opt' 'fpsgo'等 一般不需要使用其他模块进行干扰<br>
+A：CPU Turbo Scheduler在初始化阶段就已经关闭了'miuibooster' 'miperf' 'migt' 'game_opt' 'fpsgo' 'DCS' 'GED' 'oiface' 'urcc'等 一般不需要使用其他模块进行干扰<br>
 
 Q：CPU Turbo Scheduler和Scene工具箱是什么关系？  <br>
 A：这两个软件独立运作没有互相依赖 CPU Turbo Scheduler实现了接口可供Scene工具箱调用 例如性能模式切换以及分APP性能模式 如果不安装Scene工具箱也可以实现性能模式切换 <br>
@@ -92,7 +92,7 @@ A：可自行查看"/sys/devices/system/cpu/cpufreq/"文件夹 获取对应的po
 最终结果: SmallCorePath = 0 MediumCorePath = 4 BigCorePath = 7 PS:调整完后可以自定义这些核心的频率或者使用配置文件本身的默认值 但不推荐使用默认值  调整完后可以不用重启设备 只需要切换情景模式即可 <br> 
 
 Q: 调速器参数是什么东西?
-A: 这是Scheduler中的一些参数 这些设置将影响你的流畅度体验或续航 它的路径位于'/sys/devices/system/cpu/cpufreq/policyX/walt/' 
+A: 这是Scheduler中的一些参数 这些设置将影响你的流畅度体验或续航 它的路径位于'/sys/devices/system/cpu/cpufreq/policyX/scheduler/' 
 ## 配置文件说明
 ### （一）元信息（meta）
 
@@ -100,7 +100,7 @@ A: 这是Scheduler中的一些参数 这些设置将影响你的流畅度体验�
 [meta]
 name = "CpuTurboScheduler正式版模型"
 author = MoWei
-configVersion = 16
+configVersion = 17
 loglevel = "INFO"
 ```
 | 字段名   | 数据类型 | 描述                                           |
@@ -130,7 +130,7 @@ LaunchBoost = true
 | AffintySetter | bool   | 对系统和传感器关键进程和线程进行绑核操作 |
 | CpuIdleScaling_Governor | bool   | 自定义 CPUIdle 调度器。 |
 | EasScheduler | bool   | EAS 调度器参数优化 |
-| cpuset | bool | CPUSet功能 调整应用的核心分配 |
+| cpuset | bool | CPUSet功能 调整应用的核心分配 PS:该功能不会与线程模块冲突 |
 | LoadBalancing | bool | 通过优化CFS调度器的参数达到负载均衡的效果 |
 | EnableFeas | bool |  FEAS 功能（仅限极速模式）|
 | AdjIOScheduler | bool |  I/O 调度器调整以及I/O优化总开关 |
@@ -369,7 +369,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
   - 优化CPU调速器
   - sched_setaffinity优化
   - 网络优化
-  
+  - 禁止小米负优化
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
 - [CoolAPK@hfdem](https://github.com/hfdem) <br>
@@ -383,5 +383,5 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 # 使用的开源项目
 [作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
 
-### 该文档更新于:2025/08/05 11:00
+### 该文档更新于:2025/08/28 17:00
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
