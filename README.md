@@ -381,7 +381,7 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 - QQ@Microsoft
 - 各位酷友以及CS调度的所有用户
 # 使用的开源项目
-[作者:wme7 项目:INIreader](https://github.com/wme7/INIreader) <br>
+[作者:qinyonghang 项目:JSON](https://github.com/qinyonghang/json/tree/master) <br>
 
-### 该文档更新于:2025/08/28 17:00
+### 该文档更新于:2025/12/27 11:00
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
