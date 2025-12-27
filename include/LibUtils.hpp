@@ -93,5 +93,4 @@ namespace LibUtils {
         va_end(ap);
         return r;
     }
-
 };

@@ -31,12 +31,15 @@
 #include <memory>
 #include <format>
 #include "LibUtils.hpp"
+#include "Json/string.hpp"
 
 #define MAX_PKG_LEN 128
 #define MAX_THREAD_LEN 128
 #define CPU_POLICY 8 
 
 using namespace LibUtils;
+
+using string_t = qlib::string_t;
 
 using std::atomic;
 using std::unordered_map;
@@ -52,6 +55,7 @@ using std::exception;
 using std::make_unique;
 using std::to_string;
 using std::move;
+
 
 class Utils {
 private:

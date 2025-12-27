@@ -7,9 +7,10 @@ enum class LOG_LEVEL : uint8_t { DEBUG, INFO, WARN, ERROR, UNKNOWN };
 
 class Logger {
 private:
+    static constexpr const char* logpath = "/sdcard/Android/CTS/log.txt";
+
     LOG_LEVEL logLevel_;
     mutex logPrintMutex;
-    static constexpr const char* logpath = "/sdcard/Android/CTS/log.txt";
 public:
     void Debug(const char* message) {
         Log(LOG_LEVEL::DEBUG, message);
@@ -26,26 +27,21 @@ public:
         Log(LOG_LEVEL::ERROR, message);
     }
 
-    template<typename... Args>
-    void Debug(const char* message, Args&&... args) {
-        Log(LOG_LEVEL::DEBUG, message, std::forward<Args>(args)...);
+    void Debug(string message) {
+        Log(LOG_LEVEL::DEBUG, message);
     } 
 
-    template<typename... Args>
-    void Info(const char* message, Args&&... args) {
-        Log(LOG_LEVEL::INFO, message, std::forward<Args>(args)...);
+    void Info(string message) {
+        Log(LOG_LEVEL::INFO, message);
+    }
+    void Warn(string message) {
+        Log(LOG_LEVEL::WARN, message);
     }
 
-    template<typename... Args>
-    void Warn(const char* message, Args&&... args) {
-        Log(LOG_LEVEL::WARN, message, std::forward<Args>(args)...);
+    void Error(string message) {
+        Log(LOG_LEVEL::ERROR, message);
     }
-
-    template<typename... Args>
-    void Error(const char* message, Args&&... args) {
-        Log(LOG_LEVEL::ERROR, message, std::forward<Args>(args)...);
-    }
-
+    
     void setLogLevel(string& level) {
         if (level == "DEBUG") 
             logLevel_ = LOG_LEVEL::DEBUG;
@@ -78,45 +74,38 @@ private:
         }
     }
 
-    
+    int getCurrentTimeStr(char* buf, size_t size) {
+        time_t now = time(nullptr);
+        struct tm* local_time = localtime(&now);
+        return strftime(buf, size, "%Y-%m-%d %H:%M:%S", local_time);
+    }
+
     void Log(LOG_LEVEL level, const char* message) {
         lock_guard<mutex> lock(logPrintMutex);
-        static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
-            {LOG_LEVEL::ERROR, " [ERROR]:"},
-            {LOG_LEVEL::WARN, " [WARN]:"},
-            {LOG_LEVEL::INFO, " [INFO]:"},
-            {LOG_LEVEL::DEBUG, " [DEBUG]:"},
-        };
 
         if (level >= logLevel_) {
-            time_t now = time(nullptr);
-            struct tm* local_time = localtime(&now);
-            char time_str[100];
             char buff[200];
-            strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", local_time);
-            FastSnprintf(buff, sizeof(buff), "%s %s %s \n", time_str, levelStrings.at(level), message);
-            toFile(buff, Faststrlen(buff));
+            int len = getCurrentTimeStr(buff, sizeof(buff));
+            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message);
+            toFile(buff, len);
         }
     }
 
-    template<typename... Args>
-    void Log(LOG_LEVEL level, const char* message, Args&&... args) {
+    void Log(LOG_LEVEL level, const string message) {
         lock_guard<mutex> lock(logPrintMutex);
-        static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
-            {LOG_LEVEL::ERROR, " [ERROR]:"},
-            {LOG_LEVEL::WARN, " [WARN]:"},
-            {LOG_LEVEL::INFO, " [INFO]:"},
-            {LOG_LEVEL::DEBUG, " [DEBUG]:"},
-        };
-
+        
         if (level >= logLevel_) {
-            time_t now = time(nullptr);
-            struct tm* local_time = localtime(&now);
-            char time_str[100];
             char buff[200];
-            strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", local_time);
-            FastSnprintf(buff, sizeof(buff), "%s %s %s %s\n", time_str, levelStrings.at(level), message, std::forward<Args>(args)...);
-            toFile(buff, Faststrlen(buff));
+            int len = getCurrentTimeStr(buff, sizeof(buff));
+            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message.c_str());
+            toFile(buff, len);
         }
     }
+
+    const unordered_map<LOG_LEVEL, const char*> levelStrings = {
+        {LOG_LEVEL::ERROR, "警告 ->"},
+        {LOG_LEVEL::WARN, "警告 ->"},
+        {LOG_LEVEL::INFO, "信息 ->"},
+        {LOG_LEVEL::DEBUG, "调试 ->"},
+    };
 };

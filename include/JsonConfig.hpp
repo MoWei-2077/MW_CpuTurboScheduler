@@ -24,11 +24,12 @@ public:
 
         int result = json::parse(&json, text.data(), text.data() + text.size());
         if (result != 0) {
-            logger.Error("解析json配置文件失败 错误: %d", result);
+            logger.Error("解析json配置文件失败 错误: " + std::to_string(result));
             return false; 
         }
+        logger.Debug("---------源信息---------");
         name = json["meta"]["name"].get<string_t>();
-        printf("名称: %s\n" , name.c_str());
+        logger.Debug("名称: " + std::string(name.c_str()));
         return true;
     }
 };
