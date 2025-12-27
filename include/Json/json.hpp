@@ -92,7 +92,7 @@ INLINE CONSTEXPR auto exp(T& value, Iter1& first, Iter2 last) {
 }
 
 template <class T, class Enable = void>
-struct converter;
+class converter;
 
 template <class T>
 class converter<T, enable_if_t<is_unsigned_v<T>>> : public object {
@@ -316,7 +316,7 @@ protected:
     }
 
     template <class Iter1, class Iter2>
-    INLINE static constexpr int32_t _parse_unicode(uint32_t& code, Iter1& begin, Iter2 end) {
+    INLINE static constexpr int32_t _parse_unicode(uint32_t& code, Iter1& begin, Iter2) {
         int32_t result{0u};
         do {
             code = 0;

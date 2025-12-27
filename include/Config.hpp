@@ -1,36 +1,33 @@
 #pragma once 
 
+#include "Json/string.hpp"
 #include <string>
 #include <fstream>
 #include <iostream>
 
+using string_t = qlib::string_t;
 using std::ifstream;
-using std::string;
-
 
 namespace Config {
     int log;
-    string name;
-
-
-
+    string_t name;
 }
 
 class SwitchConfig {
 private:
     static constexpr const char* configPath = "";
 public:
-    string mode;
+    std::string mode;
 
     void LoadConfig() {
         ifstream file;
-        string temp; 
+        std::string temp; 
         file.open(configPath);
         if (!file.is_open()) {  
             printf("无法打开配置文件: %s\n", configPath);
             return;
         }
-        while (getline(file, temp)) Mode = temp;
+        while (getline(file, temp)) mode = temp;
         file.close();
     }
 }; 

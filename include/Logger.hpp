@@ -5,27 +5,45 @@
 
 enum class LOG_LEVEL : uint8_t { DEBUG, INFO, WARN, ERROR, UNKNOWN };
 
-namespace Logger {
+class Logger {
+private:
     LOG_LEVEL logLevel_;
     mutex logPrintMutex;
-
-    constexpr const char* logpath = "";
-
-
+    static constexpr const char* logpath = "/sdcard/Android/CTS/log.txt";
+public:
     void Debug(const char* message) {
-        log(LOG_LEVEL::DEBUG, message);
+        Log(LOG_LEVEL::DEBUG, message);
     } 
 
     void Info(const char* message) {
-        log(LOG_LEVEL::INFO, message);
+        Log(LOG_LEVEL::INFO, message);
     }
-
     void Warn(const char* message) {
-        log(LOG_LEVEL::WARN, message);
+        Log(LOG_LEVEL::WARN, message);
     }
 
     void Error(const char* message) {
-        log(LOG_LEVEL::ERROR, message);
+        Log(LOG_LEVEL::ERROR, message);
+    }
+
+    template<typename... Args>
+    void Debug(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::DEBUG, message, std::forward<Args>(args)...);
+    } 
+
+    template<typename... Args>
+    void Info(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::INFO, message, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void Warn(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::WARN, message, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void Error(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::ERROR, message, std::forward<Args>(args)...);
     }
 
     void setLogLevel(string& level) {
@@ -41,27 +59,7 @@ namespace Logger {
             logLevel_ = LOG_LEVEL::UNKNOWN;
     }
 
-    template<typename... Args>
-    void log(LOG_LEVEL level, const char* message, Args&&... args) {
-        lock_guard<mutex> lock(logPrintMutex);
-        static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
-            {LOG_LEVEL::ERROR, " [ERROR] "},
-            {LOG_LEVEL::WARN, " [WARN] "},
-            {LOG_LEVEL::INFO, " [INFO] "},
-            {LOG_LEVEL::DEBUG, " [DEBUG] "},
-        };
-
-        if (level <= logLevel_) {
-            time_t now = time(nullptr);
-            struct tm* local_time = localtime(&now);
-            char time_str[100];
-            char buff[200];
-            strftime(time_str, sizeof(time_str), "[%Y-%m-%d %H:%M:%S]", local_time);
-            FastSnprintf(buff, sizeof(buff), "%s %s %s %d\n", time_str, levelStrings.at(level), message, std::forward<Args>(args)...);
-            toFile(buff, Faststrlen(buff));
-        }
-    }
-
+private:
     void toFile(const char* logStr, const int len) {
         auto fp = fopen(logpath, "ab");
         if (!fp) {
@@ -77,6 +75,48 @@ namespace Logger {
         if (!temp) {
             fprintf(stderr, "ERROR:清理日志文件失败");
             return;
+        }
+    }
+
+    
+    void Log(LOG_LEVEL level, const char* message) {
+        lock_guard<mutex> lock(logPrintMutex);
+        static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
+            {LOG_LEVEL::ERROR, " [ERROR]:"},
+            {LOG_LEVEL::WARN, " [WARN]:"},
+            {LOG_LEVEL::INFO, " [INFO]:"},
+            {LOG_LEVEL::DEBUG, " [DEBUG]:"},
+        };
+
+        if (level >= logLevel_) {
+            time_t now = time(nullptr);
+            struct tm* local_time = localtime(&now);
+            char time_str[100];
+            char buff[200];
+            strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", local_time);
+            FastSnprintf(buff, sizeof(buff), "%s %s %s \n", time_str, levelStrings.at(level), message);
+            toFile(buff, Faststrlen(buff));
+        }
+    }
+
+    template<typename... Args>
+    void Log(LOG_LEVEL level, const char* message, Args&&... args) {
+        lock_guard<mutex> lock(logPrintMutex);
+        static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
+            {LOG_LEVEL::ERROR, " [ERROR]:"},
+            {LOG_LEVEL::WARN, " [WARN]:"},
+            {LOG_LEVEL::INFO, " [INFO]:"},
+            {LOG_LEVEL::DEBUG, " [DEBUG]:"},
+        };
+
+        if (level >= logLevel_) {
+            time_t now = time(nullptr);
+            struct tm* local_time = localtime(&now);
+            char time_str[100];
+            char buff[200];
+            strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", local_time);
+            FastSnprintf(buff, sizeof(buff), "%s %s %s %s\n", time_str, levelStrings.at(level), message, std::forward<Args>(args)...);
+            toFile(buff, Faststrlen(buff));
         }
     }
 };
