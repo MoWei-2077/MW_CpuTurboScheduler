@@ -6,11 +6,30 @@
 #include "Json/string.hpp"
 
 using string_t = qlib::string_t;
+using bool_t = qlib::bool_t;
+
 using std::ifstream;
 
 namespace Config {
-    int log;
-    string_t name;
+    namespace Meta {
+        string_t name;
+        int version = -1;
+        string_t author;
+        string_t loglevel;
+    }
+    
+    namespace Policy {
+        int CpuPolicy [4] = { -1, -1, -1, -1 }; 
+    }
+
+    namespace Function {
+        bool Cpuset = false;
+        string_t top_app;
+        string_t foreground;
+        string_t background;
+        string_t system_background;
+        string_t restricted;
+    }
 }
 
 class SwitchConfig {
