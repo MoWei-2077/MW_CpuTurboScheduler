@@ -3,6 +3,10 @@
 #include "Utils.hpp"
 #include "LibUtils.hpp"
 
+// 配置编译选项 *****************
+#define DEBUG_DURATION 0 
+// *****************************
+
 enum class LOG_LEVEL : uint8_t { DEBUG, INFO, WARN, ERROR, UNKNOWN };
 
 class Logger {
@@ -85,8 +89,10 @@ private:
         if (level >= logLevel_) {
             char buff[200];
             int len = getCurrentTimeStr(buff, sizeof(buff));
-            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message);
-            printf("%s\n", buff);
+            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(logLevel_), message);
+            #if DEBUG_DURATION
+                printf("%s\n", buff);
+            #endif
             toFile(buff, len);
         }
     }
@@ -97,8 +103,10 @@ private:
         if (level >= logLevel_) {
             char buff[200];
             int len = getCurrentTimeStr(buff, sizeof(buff));
-            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message.c_str());
-            printf("%s\n", buff);
+            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(logLevel_), message.c_str());
+            #if DEBUG_DURATION
+                printf("%s\n", buff);
+            #endif
             toFile(buff, len);
         }
     }
