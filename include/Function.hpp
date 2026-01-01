@@ -134,8 +134,8 @@ public:
         
         if (checkEasSched()) {
             utils.FileWrite("/proc/sys/kernel/sched_energy_aware", Scheduler::Sched_energy_aware ? "1" : "0");
-            logger.Info("已开启EAS调度器");
-        } else 
+            logger.Info(Scheduler::Sched_energy_aware ? "已开启EAS调度器" : "已关闭EAS调度器");
+        } else
             logger.Warn("您的设备并不支持EAS调度器");
 
         logger.Debug("Sched_energy_aware调整为:" + std::string(Scheduler::Sched_energy_aware ? "1" : "0"));

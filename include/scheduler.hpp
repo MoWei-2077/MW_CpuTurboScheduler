@@ -15,12 +15,12 @@ private:
 
     std::vector<thread> threads;
 
-    SchedParam schedParam[4];
-
     Function function;
     JsonConfig config;
     Logger logger;
     Utils utils;
+
+    mutex FreqWriterMutex;
 
     char temp[256];
 public:
@@ -33,40 +33,34 @@ public:
         threads.emplace_back(thread(&Schedule::cpuSetTriggerTask, this));
     }
 
+    void FreqWriter(const int Policy, const string_t MinFreq, const string_t MaxFreq, const string_t Governor) {
+        lock_guard<mutex> lock(FreqWriterMutex);
+        
+        FastSnprintf(temp, sizeof(temp), MinFreqPath, Policy);
+        utils.FileWrite(temp, MinFreq);
+
+        logger.Debug("CPU簇" + std::to_string(Policy) + "最小频率: " + std::string(MinFreq.c_str()));
+
+        FastSnprintf(temp, sizeof(temp), MaxFreqPath, Policy);
+        utils.FileWrite(temp, MaxFreq);
+        logger.Debug("CPU簇" + std::to_string(Policy) + "最大频率: " + std::string(MaxFreq.c_str()));
+
+        FastSnprintf(temp, sizeof(temp), GovernorPath, Policy);
+        utils.FileWrite(temp, Governor);
+        logger.Debug("CPU簇" + std::to_string(Policy) + "调速器: " + std::string(Governor.c_str()));
+    }
+
     void release() {
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FastSnprintf(temp, sizeof(temp), MinFreqPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::MinFreq[i]);
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "最小频率: " + std::string(Performances::MinFreq[i].c_str()));
-
-            FastSnprintf(temp, sizeof(temp), MaxFreqPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::MaxFreq[i]);
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "最大频率: " + std::string(Performances::MaxFreq[i].c_str()));
-
-            FastSnprintf(temp, sizeof(temp), GovernorPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::CpuGovernor[i]);
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "调速器: " + std::string(Performances::CpuGovernor[i].c_str()));
+            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], Performances::MaxFreq[i], Performances::CpuGovernor[i]);
         }
     }
 
     void boost() {
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FastSnprintf(temp, sizeof(temp), MinFreqPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::MinFreq[i]);
-
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "最小频率: " + std::string(Performances::MinFreq[i].c_str()));
-
-            FastSnprintf(temp, sizeof(temp), MaxFreqPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::MaxFreq[i]);
-                        
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "最大频率: " + std::string(Performances::MaxFreq[i].c_str()));
-
-            FastSnprintf(temp, sizeof(temp), GovernorPath, Policy::CpuPolicy[i]);
-            utils.FileWrite(temp, Performances::CpuGovernor[i]);
-                        
-            logger.Debug("CPU簇" + std::to_string(Policy::CpuPolicy[i]) + "调速器: " + std::string(Performances::CpuGovernor[i].c_str()));
+            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], Performances::MaxFreq[i], Performances::CpuGovernor[i]);
         }
     }
 
@@ -81,11 +75,11 @@ public:
     void SchedParam() {
         for (int i = 0; i <= 3; i++) {
             for (int j = 1; j <= 12; j++) {
-                if (Policy::CpuPolicy[i] == -1) continue;
-                FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), schedParam[i].Value[j].c_str());
-                utils.FileWrite(temp, schedParam[i].Name[j].c_str());
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(schedParam[i].Value[j].c_str()));
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(schedParam[i].Name[j].c_str()));
+                if (Policy::CpuPolicy[i] == -1 || config.schedParam[i].Name[j].empty()) continue;
+                FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), config.schedParam[i].Value[j].c_str());
+                utils.FileWrite(temp, config.schedParam[i].Name[j].c_str());
+                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(config.schedParam[i].Value[j].c_str()));
+                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(config.schedParam[i].Name[j].c_str()));
             }
         }
     }
@@ -96,6 +90,7 @@ public:
             config.readConfig();
             release();
             SchedParam();
+            online();
         }
     }
 
@@ -108,9 +103,9 @@ public:
     }
 
     void cpuSetTriggerTask() {
-        while (true) {
-            if (!LaunchBoost::enable) return;
+        if (!LaunchBoost::enable) return;
 
+        while (true) {
             constexpr int TRIGGER_BUF_SIZE = 8192;
 
             sleep(1);
@@ -173,5 +168,6 @@ public:
         function.AllFunC();
         release();
         SchedParam();
+        online();
     }
 };

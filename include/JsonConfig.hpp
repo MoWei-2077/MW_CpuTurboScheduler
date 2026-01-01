@@ -18,6 +18,8 @@ private:
 
     mutex jsonReadMutex;
 
+    std::string lastSwitchMode;
+
     char buff[256];
     char cluster [64];
 public:
@@ -176,6 +178,10 @@ public:
         if (!switchConfig()) {
             logger.Error("情景模式异常 当前情景模式: " + config.mode);
             return false;
+        }
+
+        if (lastSwitchMode != config.mode && !lastSwitchMode.empty()) {
+            logger.Info(std::string(lastSwitchMode) + " -> " + std::string(lastSwitchMode));
         }
 
         #if DEBUG_DURATION
