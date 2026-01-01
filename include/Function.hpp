@@ -1,5 +1,6 @@
 #pragma once
 
+#include "JsonConfig.hpp"
 #include "Config.hpp"
 #include "Utils.hpp" 
 #include "Logger.hpp"
@@ -18,6 +19,15 @@ private:
     Utils utils;
     Logger logger;
 public:
+    void AllFunC() {
+        cpuctlFunction();
+        cpusetFunction();
+        disableGpuBoost();
+        LoadBanlance();
+        IoSchedOpt();
+        CfsSchedOpt();
+    }
+    
     void cpuctlFunction() {
         if (!checkCpuctl()) return;
         utils.FileWrite("/dev/cpuctl/top-app/cpu.uclamp.max", "max");
@@ -30,11 +40,11 @@ public:
     
     void cpusetFunction() {
         if (!Cpuset::enable) return;
-        utils.FileWrite("/dev/cpuset/top-app/cpus", Cpuset::top_app.c_str());
-        utils.FileWrite("/dev/cpuset/foreground/cpus", Cpuset::foreground.c_str());
-        utils.FileWrite("/dev/cpuset/background/cpus", Cpuset::background.c_str());
-        utils.FileWrite("/dev/cpuset/system-background/cpus", Cpuset::system_background.c_str());
-        utils.FileWrite("/dev/cpuset/restricted/cpus", Cpuset::restricted.c_str());
+        utils.FileWrite("/dev/cpuset/top-app/cpus", Cpuset::top_app);
+        utils.FileWrite("/dev/cpuset/foreground/cpus", Cpuset::foreground);
+        utils.FileWrite("/dev/cpuset/background/cpus", Cpuset::background);
+        utils.FileWrite("/dev/cpuset/system-background/cpus", Cpuset::system_background);
+        utils.FileWrite("/dev/cpuset/restricted/cpus", Cpuset::restricted);
 
         logger.Debug("top_app: " + std::string(Cpuset::top_app.c_str()));
         logger.Debug("foreground: " + std::string(Cpuset::foreground.c_str()));
@@ -45,6 +55,7 @@ public:
         logger.Info("CpuSet调整完毕");
     }
 
+    
     void disableGpuBoost() {
         if (!checkQcom() || !DisableGpuBoost::enable) return;
         const int buff = utils.readInt("/sys/class/kgsl/kgsl-3d0/num_pwrlevels");
@@ -77,7 +88,7 @@ public:
 
     void LoadBanlance() {
         if (!LoadBanlace::enable) return;
-        if (checkCpuset()) { logger.Warn("您的设备并不支持均衡负载"); return; }
+        if (!checkCpuset()) { logger.Warn("您的设备并不支持均衡负载"); return; }
         utils.FileWrite("/dev/cpuset/sched_load_balance", "1");
         utils.FileWrite("/dev/cpuset/*/sched_load_balance", "1");
         utils.FileWrite("/dev/cpuset/sched_relax_domain_level", "0"); 
@@ -94,11 +105,11 @@ public:
 
     void IoSchedOpt() {
         if (!DisableGpuBoost::enable) return;
-        utils.FileWrite("/sys/block/*/queue/scheduler", IO_Optimization::scheduler.c_str());
-        utils.FileWrite("/sys/block/*/queue/nomerges", IO_Optimization::nomerges.c_str());
-        utils.FileWrite("/sys/block/*/queue/iostats", IO_Optimization::iostats.c_str());
-        utils.FileWrite("/sys/block/*/queue/read_ahead_kb", IO_Optimization::read_ahead_kb.c_str());
-        utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", IO_Optimization::read_ahead_kb.c_str());
+        utils.FileWrite("/sys/block/*/queue/scheduler", IO_Optimization::scheduler);
+        utils.FileWrite("/sys/block/*/queue/nomerges", IO_Optimization::nomerges);
+        utils.FileWrite("/sys/block/*/queue/iostats", IO_Optimization::iostats);
+        utils.FileWrite("/sys/block/*/queue/read_ahead_kb", IO_Optimization::read_ahead_kb);
+        utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", IO_Optimization::read_ahead_kb);
 
         // 后续可以考虑区分"emmc"和"ufs"设备进行自动优化 只需要 IO_Optimization::scheduler = "auto"即可
         // mq-deadline kyber [bfq] none 
@@ -113,13 +124,13 @@ public:
     void CfsSchedOpt() {
         if (!Scheduler::enable) return;
         utils.FileWrite("/proc/sys/kernel/sched_schedstats", Scheduler::Sched_schedstats ? "1" : "0");
-        utils.FileWrite("/proc/sys/kernel/sched_latency_ns", Scheduler::Sched_latency_ns.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_migration_cost_ns", Scheduler::Sched_migration_cost_ns.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_min_granularity_ns", Scheduler::Sched_min_granularity_ns.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_wakeup_granularity_ns", Scheduler::Sched_wakeup_granularity_ns.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_nr_migrate", Scheduler::Sched_nr_migrate.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_util_clamp_min", Scheduler::Sched_util_clamp_min.c_str());
-        utils.FileWrite("/proc/sys/kernel/sched_util_clamp_max", Scheduler::Sched_util_clamp_max.c_str());
+        utils.FileWrite("/proc/sys/kernel/sched_latency_ns", Scheduler::Sched_latency_ns);
+        utils.FileWrite("/proc/sys/kernel/sched_migration_cost_ns", Scheduler::Sched_migration_cost_ns);
+        utils.FileWrite("/proc/sys/kernel/sched_min_granularity_ns", Scheduler::Sched_min_granularity_ns);
+        utils.FileWrite("/proc/sys/kernel/sched_wakeup_granularity_ns", Scheduler::Sched_wakeup_granularity_ns);
+        utils.FileWrite("/proc/sys/kernel/sched_nr_migrate", Scheduler::Sched_nr_migrate);
+        utils.FileWrite("/proc/sys/kernel/sched_util_clamp_min", Scheduler::Sched_util_clamp_min);
+        utils.FileWrite("/proc/sys/kernel/sched_util_clamp_max", Scheduler::Sched_util_clamp_max);
         
         if (checkEasSched()) {
             utils.FileWrite("/proc/sys/kernel/sched_energy_aware", Scheduler::Sched_energy_aware ? "1" : "0");
@@ -142,33 +153,33 @@ public:
 
     bool FeasFunc(bool Enable) {
         // 后续可直接获取前台 检测是否是游戏 来确定是否需要开启"Feas"
-        if (checkQcom()) {
+        if (checkQcomFeas()) {
             utils.FileWrite(qcomFeas, Enable ? "1" : "0");
-            logger.Debug("QCOM Feas 已" + (Enable ? "开启" : "关闭"));
+            logger.Debug("QCOM Feas 已" + std::string(Enable ? "开启" : "关闭"));
             return true;
         } 
 
         if (checkMtkFeas()) {
             utils.FileWrite(mtkFeas, Enable ? "1" : "0");
-            logger.Debug("MTK Feas 已" + (Enable ? "开启" : "关闭"));
+            logger.Debug("MTK Feas 已" + std::string(Enable ? "开启" : "关闭"));
             return true;
         }
         return false;
     }
 private:
-    bool checkQcom() const {
+    bool checkQcomFeas() const {
         return (!access(qcomFeas, F_OK));
     }
     
     bool checkMtkFeas() const {
-        return (!access(mtkFeas, F_OK))
+        return (!access(mtkFeas, F_OK));
     }
     bool checkCpuset() const {
         return (!access(cpusetPath, F_OK));
     }
 
     bool checkCpuctl() const {
-        return (!access(cpuctlPath, F_OK))
+        return (!access(cpuctlPath, F_OK));
     }
 
     bool checkEasSched() const {

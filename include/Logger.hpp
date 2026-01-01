@@ -12,6 +12,7 @@ enum class LOG_LEVEL : uint8_t { DEBUG, INFO, WARN, ERROR, UNKNOWN };
 class Logger {
 private:
     static constexpr const char* logpath = "/sdcard/Android/CTS/log.txt";
+    
     inline static LOG_LEVEL logLevel_;
     inline static mutex logPrintMutex;
 public:

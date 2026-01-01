@@ -11,17 +11,26 @@ using namespace qlib;
 class JsonConfig {
 private:
     static constexpr const char* configPath = "/sdcard/Android/CTS/config.json";
-    
+
     Logger logger;
     json_view_t json;
     SwitchConfig config;
+
+    mutex jsonReadMutex;
 
     char buff[256];
     char cluster [64];
 public:
     SchedParam schedParam[4];
     
+    inline bool switchConfig() const {
+        if (config.mode == "powersave" || "balance" || "performance" || "fast") return true;
+        return false;
+    }
+
     bool readConfig() {
+
+        lock_guard<mutex> lock(jsonReadMutex);
 
         config.LoadConfig();
         ifstream ifs(configPath, std::ios::binary);
@@ -158,11 +167,17 @@ public:
 
             logger.Debug("---------性能模式---------");
         #endif
+        
         if (config.mode.empty()) {
             logger.Error("情景模式为空 无法读取数据");
             return false;
         }
-        
+
+        if (!switchConfig()) {
+            logger.Error("情景模式异常 当前情景模式: " + config.mode);
+            return false;
+        }
+
         #if DEBUG_DURATION
             logger.Debug("当前性能模式: " + config.mode);
         #endif
@@ -170,9 +185,9 @@ public:
         auto& Switch = json["Switch"][config.mode.c_str()];
         for (int i = 0; i <= 3; i++) {
             FastSnprintf(buff, sizeof(buff), "c%d", i);
-            auto MinFreq = Performances::MinFreq[i] = Switch["MinFreq"][buff].get<string_t>();
-            auto MaxFreq = Performances::MaxFreq[i] = Switch["MaxFreq"][buff].get<string_t>();
-            auto CpuGovernor = Performances::CpuGovernor[i] = Switch["governor"][buff].get<string_t>();
+            auto& MinFreq = Performances::MinFreq[i] = Switch["MinFreq"][buff].get<string_t>();
+            auto& MaxFreq = Performances::MaxFreq[i] = Switch["MaxFreq"][buff].get<string_t>();
+            auto& CpuGovernor = Performances::CpuGovernor[i] = Switch["governor"][buff].get<string_t>();
             if (MinFreq.empty() || MaxFreq.empty() || CpuGovernor.empty()) continue;
         #if DEBUG_DURATION
             logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " MinFreq: " + std::string(Performances::MinFreq[i].c_str()));
@@ -198,12 +213,12 @@ public:
             logger.Debug("---------调速器参数---------");
         #endif 
         
-        for (int i = 0; i <= 3; i++){
+        for (int i = 0; i <= 3; i++) {
             FastSnprintf(cluster, sizeof(cluster), "c%d", i);
             for (int j = 1; j <= 12; j++) {
                 FastSnprintf(buff, sizeof(buff), "Path%d", j);
 
-                auto name = schedParam[i].Name[j] = Switch["SchedParam"][cluster][buff].get<string_t>();
+                auto& name = schedParam[i].Name[j] = Switch["SchedParam"][cluster][buff].get<string_t>();
                 if (name.empty()) continue;
 
                 FastSnprintf(buff, sizeof(buff), "value%d", j);

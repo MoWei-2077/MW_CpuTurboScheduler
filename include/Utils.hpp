@@ -92,6 +92,23 @@ public:
         }
     }
 
+        
+    void FileWrite(const char* filePath, const string_t& content) noexcept {
+        int fd = open(filePath, O_WRONLY | O_NONBLOCK);
+
+        if (fd < 0) {
+            chmod(filePath, 0666);
+            fd = open(filePath, O_WRONLY | O_CREAT | O_NONBLOCK); 
+        }
+
+        if (fd >= 0) {
+            write(fd, content.data(), content.size());
+            close(fd);
+            chmod(filePath, 0444);
+        }
+    }
+
+
     void WriteFile(const char* filePath, const char* content) noexcept {
         int fd = open(filePath, O_WRONLY | O_TRUNC | O_CREAT, 0666); 
 
@@ -420,10 +437,10 @@ public:
         return string(temp);
     }
 
-    size_t popenRead(const char* cmd, char* buf) {
+    size_t popenRead(const char* cmd, char* buf, size_t len) {
         auto fp = popen(cmd, "r");
         if (!fp) return 0;
-        auto readLen = fread(buf, 1, sizeof(buf), fp);
+        auto readLen = fread(buf, 1, len, fp);
         pclose(fp);
         return readLen;
     }

@@ -32,6 +32,7 @@ namespace LibUtils {
             *--out = (char)('0' + (val % 10u));
             val /= 10u;
         } while (val);
+        
         const size_t len = (size_t)(tmp + sizeof(tmp) - out);
     
         const size_t avail = (end > buf) ? (size_t)(end - buf) : 0;
