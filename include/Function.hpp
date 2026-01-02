@@ -11,6 +11,7 @@ class Function {
 private:
     static constexpr const char* qcomFeas = "/sys/module/perfmgr/parameters/perfmgr_enable";
     static constexpr const char* mtkFeas = "/sys/module/mtk_fpsgo/parameters/perfmgr_enable";
+    static constexpr const char* ufsPath = "/sys/class/block/sda";
     static constexpr const char* cpusetPath = "/dev/cpuset/";
     static constexpr const char* cpuctlPath = "/dev/cpuctl/";
     static constexpr const char* qcomGpuPath = "/sys/class/kgsl/kgsl-3d0/";
@@ -105,19 +106,30 @@ public:
 
     void IoSchedOpt() {
         if (!DisableGpuBoost::enable) return;
-        utils.FileWrite("/sys/block/*/queue/scheduler", IO_Optimization::scheduler);
-        utils.FileWrite("/sys/block/*/queue/nomerges", IO_Optimization::nomerges);
-        utils.FileWrite("/sys/block/*/queue/iostats", IO_Optimization::iostats);
-        utils.FileWrite("/sys/block/*/queue/read_ahead_kb", IO_Optimization::read_ahead_kb);
-        utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", IO_Optimization::read_ahead_kb);
-
-        // 后续可以考虑区分"emmc"和"ufs"设备进行自动优化 只需要 IO_Optimization::scheduler = "auto"即可
-        // mq-deadline kyber [bfq] none 
-        logger.Debug("IO调度器调整为: " + std::string(IO_Optimization::scheduler.c_str()));
-        logger.Debug("nomerges调整为: " + std::string(IO_Optimization::nomerges.c_str()));
-        logger.Debug("iostats调整为: " + std::string(IO_Optimization::iostats.c_str()));
-        logger.Debug("read_ahead_kb调整为: " + std::string(IO_Optimization::read_ahead_kb.c_str()));
-        
+        if (IO_Optimization::scheduler != "auto") {
+            utils.FileWrite("/sys/block/*/queue/scheduler", IO_Optimization::scheduler);
+            utils.FileWrite("/sys/block/*/queue/nomerges", IO_Optimization::nomerges);
+            utils.FileWrite("/sys/block/*/queue/iostats", IO_Optimization::iostats);
+            utils.FileWrite("/sys/block/*/queue/read_ahead_kb", IO_Optimization::read_ahead_kb);
+            utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", IO_Optimization::read_ahead_kb);
+            logger.Debug("IO调度器调整为: " + std::string(IO_Optimization::scheduler.c_str()));
+            logger.Debug("nomerges调整为: " + std::string(IO_Optimization::nomerges.c_str()));
+            logger.Debug("iostats调整为: " + std::string(IO_Optimization::iostats.c_str()));
+            logger.Debug("read_ahead_kb调整为: " + std::string(IO_Optimization::read_ahead_kb.c_str()));
+        } else if (IO_Optimization::scheduler == "auto" && checkUfs()) {
+            // ufs 首选none 如果不支持系统也会切换为bfq
+            utils.FileWrite("/sys/block/*/queue/scheduler", "none");
+            utils.FileWrite("/sys/block/*/queue/nomerges", "2");
+            utils.FileWrite("/sys/block/*/queue/iostats", "0");
+            utils.FileWrite("/sys/block/*/queue/read_ahead_kb", "128");
+            utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", "128");
+        } else if (IO_Optimization::scheduler == "auto") {
+            // 部分emmc设备只支持deadline和noop 让系统自己选择也许更好
+            utils.FileWrite("/sys/block/*/queue/nomerges", "2");
+            utils.FileWrite("/sys/block/*/queue/iostats", "0");
+            utils.FileWrite("/sys/block/*/queue/read_ahead_kb", "128");
+            utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", "128");
+        }
         logger.Info("IO优化完毕");
     }
 
@@ -167,6 +179,10 @@ public:
         return false;
     }
 private:
+    bool checkUfs() const {
+        return (!access(ufsPath, F_OK));
+    }
+
     bool checkQcomFeas() const {
         return (!access(qcomFeas, F_OK));
     }

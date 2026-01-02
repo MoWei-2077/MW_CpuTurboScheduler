@@ -26,7 +26,7 @@ public:
     SchedParam schedParam[4];
     
     inline bool switchConfig() const {
-        if (config.mode == "powersave" || "balance" || "performance" || "fast") return true;
+        if (config.mode == "powersave" || config.mode == "balance" || config.mode == "performance" || config.mode == "fast") return true;
         return false;
     }
 
@@ -76,6 +76,7 @@ public:
         #if DEBUG_DURATION
             logger.Debug("---------附加功能---------");
         #endif 
+
         auto& Cpuset = json["Function"]["Cpuset"];
         Cpuset::enable = Cpuset["enable"].get<bool>();
         Cpuset::top_app = Cpuset["top_app"].get<string_t>();
@@ -94,6 +95,17 @@ public:
             logger.Debug("---------均衡负载---------");
         #endif
 
+        auto& Boost = json["Function"]["Boost"];
+        Boost::boost_rate_limit_ms = Boost["boost_rate_limit_ms"].get<int>();
+        for (int i = 0; i <= 3; i++) {
+            FastSnprintf(buff, sizeof(buff), "c%d", i);
+            auto& BoostFreq = Boost::BoostFreq[i] = Boost["BoostFreq"][buff].get<string_t>();
+            if (BoostFreq.empty()) continue;
+    
+        #if DEBUG_DURATION
+            logger.Debug("Boost升频持续时间: " + std::to_string(Boost::boost_rate_limit_ms));
+        #endif
+        }
         auto& LoadBalancing = json["Function"]["LoadBalancing"];
         LoadBanlace::enable = LoadBalancing["enable"].get<bool>();
 
@@ -143,6 +155,7 @@ public:
 
             logger.Debug("---------调度器优化---------");
         #endif 
+
         auto& Scheduler = json["Function"]["Scheduler"];
         Scheduler::enable = Scheduler["enable"].get<bool>();
         Scheduler::Sched_energy_aware = Scheduler["sched_energy_aware"].get<bool>();
@@ -180,10 +193,8 @@ public:
             return false;
         }
 
-        if (lastSwitchMode != config.mode && !lastSwitchMode.empty()) {
-            logger.Info(std::string(lastSwitchMode) + " -> " + std::string(lastSwitchMode));
-        }
-
+        logger.Info("已启用" + config.mode + "模式");
+        
         #if DEBUG_DURATION
             logger.Debug("当前性能模式: " + config.mode);
         #endif
@@ -231,8 +242,9 @@ public:
                 schedParam[i].Value[j] = Switch["SchedParam"][cluster][buff].get<string_t>();
 
                 #if DEBUG_DURATION
-                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(schedParam[i].Value[j].c_str()));
-                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(schedParam[i].Name[j].c_str()));
+                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + 
+                        std::to_string(j) + " 名称: " + std::string(schedParam[i].Name[j].c_str()) + 
+                        " 值: " + std::string(schedParam[i].Value[j].c_str()));
                 #endif
             }
         }

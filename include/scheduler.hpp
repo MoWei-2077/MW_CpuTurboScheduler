@@ -57,11 +57,13 @@ public:
         }
     }
 
-    void boost() {
+    void boost() {     
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], Performances::MaxFreq[i], Performances::CpuGovernor[i]);
+            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], Boost::BoostFreq[i], Performances::CpuGovernor[i]);
         }
+        utils.sleep_ms(Boost::boost_rate_limit_ms);
+        release();
     }
 
     void online() {
@@ -77,7 +79,7 @@ public:
             for (int j = 1; j <= 12; j++) {
                 if (Policy::CpuPolicy[i] == -1 || config.schedParam[i].Name[j].empty()) continue;
                 FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), config.schedParam[i].Value[j].c_str());
-                utils.FileWrite(temp, config.schedParam[i].Name[j].c_str());
+                utils.FileWrite(temp, config.schedParam[i].Value[j].c_str());
                 logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(config.schedParam[i].Value[j].c_str()));
                 logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(config.schedParam[i].Name[j].c_str()));
             }
@@ -128,8 +130,8 @@ public:
 
             char buf[TRIGGER_BUF_SIZE];
             while (read(inotifyFd, buf, TRIGGER_BUF_SIZE) > 0) {
-                // Boost
-                break;
+                boost();
+                logger.Debug("前台进程已切换 已触发LaunchBoost");
             }
 
             inotify_rm_watch(inotifyFd, watch_d);
@@ -160,7 +162,7 @@ public:
         logger.clear_log();
         config.readConfig();
 
-        logger.setLogLevel(std::string(Meta::loglevel.c_str()));
+        logger.setLogLevel(Meta::loglevel);
         logger.Info("名称: " + std::string(Meta::name.c_str()));
         logger.Info("版本: " + std::to_string(Meta::version));
         logger.Info("作者: " + std::string(Meta::author.c_str()));

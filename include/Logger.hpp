@@ -46,7 +46,7 @@ public:
         Log(LOG_LEVEL::ERROR, message);
     }
 
-    static void setLogLevel(string level) {
+    static void setLogLevel(string_t level) {
         if (level == "DEBUG") 
             logLevel_ = LOG_LEVEL::DEBUG;
         else if (level == "INFO") 

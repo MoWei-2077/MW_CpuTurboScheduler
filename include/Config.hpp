@@ -31,6 +31,11 @@ namespace Config {
         string_t restricted;
     }
 
+    namespace Boost {
+        int boost_rate_limit_ms;
+        string_t BoostFreq[4];  
+    }
+
     namespace LoadBanlace {
         bool enable = false;
     }
