@@ -6,7 +6,7 @@ class Schedule {
 private:
     static constexpr const char* configPath = "/sdcard/Android/CTS/mode.txt";
     static constexpr const char* jsonPath = "/sdcard/Android/CTS/config.json";
-    static constexpr const char* cpusetEventPath = "/dev/cpuset/top-app/cgroup.procs";
+    static constexpr const char* cpusetEventPath = "/dev/cpuset/top-app";
     static constexpr const char* onlinePath = "/sys/devices/system/cpu/cpu%d/online";
     static constexpr const char* SchedParamPath = "/sys/devices/system/cpu/cpufreq/policy%d/%s/%s";
     static constexpr const char* GovernorPath = "/sys/devices/system/cpu/cpufreq/policy%d/scaling_governor";
@@ -28,6 +28,7 @@ public:
 
     Schedule() {
         Init();
+        threads.emplace_back(thread(&Schedule::cpuWriterTask, this));
         threads.emplace_back(thread(&Schedule::configTriggerTask, this));
         threads.emplace_back(thread(&Schedule::jsonTriggerTask, this));
         threads.emplace_back(thread(&Schedule::cpuSetTriggerTask, this));
@@ -86,6 +87,16 @@ public:
         }
     }
 
+    void cpuWriterTask() {
+        while (true) {
+            // 防止设置被更改
+            release();
+            SchedParam();
+            online();
+            sleep(5);
+        }
+    }
+
     void configTriggerTask() {
         while (true) {
             utils.InotifyMain(configPath, IN_MODIFY);
@@ -119,7 +130,7 @@ public:
             }
 
             
-            int watch_d = inotify_add_watch(inotifyFd, cpusetEventPath, IN_MODIFY);
+            int watch_d = inotify_add_watch(inotifyFd, cpusetEventPath, IN_ALL_EVENTS);
             
             if (watch_d < 0) {
                 fprintf(stderr, "同步事件: 0xB1 (2/3)失败: [%d]:[%s]", errno, strerror(errno));
@@ -132,6 +143,7 @@ public:
             while (read(inotifyFd, buf, TRIGGER_BUF_SIZE) > 0) {
                 boost();
                 logger.Debug("前台进程已切换 已触发LaunchBoost");
+                utils.sleep_ms(500); // 防抖
             }
 
             inotify_rm_watch(inotifyFd, watch_d);

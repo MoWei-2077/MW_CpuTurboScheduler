@@ -73,7 +73,6 @@ public:
         if (fd >= 0) {
             write(fd, content, Faststrlen(content));
             close(fd);
-            chmod(filePath, 0444);
         }
     }
     
@@ -104,7 +103,6 @@ public:
         if (fd >= 0) {
             write(fd, content.data(), content.size());
             close(fd);
-            chmod(filePath, 0444);
         }
     }
 
