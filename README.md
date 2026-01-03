@@ -347,41 +347,22 @@ echo "powersave" > /sdcard/Android/MW_CpuSpeedController/config.txt
 
 ## 外围改进
 本模块除了CS调度本体的优化，还配合一些外围的改进共同提升用户使用体验。
-  - Mi FEAS功能
-  - 调整系统和传感器的关键进程线程的CPU核心
   - 关闭高通GpuBoost
   - 调整CPUset
   - 调整CPUctl
   - 负载均衡
-  - UFS时钟门开关
-  - CPUIdle调度器调整
-  - 关闭foreground boost
-  - I/O优化
   - 禁用大多数内核态和用户态boost、热插拔
-  - schedtune.Boost置零
-  - EAS CFS调度器参数优化
-  - 'DDR' 'LLCC' 'L3'参数优化
+  - CFS调度器参数优化
   - I/O调速器优化
   - "制裁"垃圾进程
-  - 优化I/O延迟
-  - 优化I/O预读写速度
-  - 频率分簇
-  - 优化CPU调速器
-  - sched_setaffinity优化
-  - 网络优化
-  - 禁止小米负优化
+  
 # 致谢 （排名不分前后）
 感谢以下用户对本项目的帮助：  
-- [CoolAPK@hfdem](https://github.com/hfdem) <br>
-- [CoolAPK@ztc1997](https://github.com/ztc1997) <br>
-- [CoolAPK@XShe](https://github.com/XShePlus) <br>
-- [CoolAPK@Timeline](https://github.com/nep-Timeline) <br>
-- [CoolAPK@shrairo](https://github.com/shrairo) <br>
-- QQ@长虹久奕
-- QQ@Microsoft
-- 各位酷友以及CS调度的所有用户
+- nullptr
+
 # 使用的开源项目
 [作者:qinyonghang 项目:JSON](https://github.com/qinyonghang/json/tree/master) <br>
+[作者:MoWei 项目:LibUtils](https://github.com/MoWei-2077/FastStdLib) <br>
 
-### 该文档更新于:2025/12/27 11:00
+### 该文档更新于:2026/01/03
 - 感谢所有用户的测试反馈 这将推进CPU Turbo Scheduler的开发
