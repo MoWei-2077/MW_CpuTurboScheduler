@@ -1,0 +1,59 @@
+# Compiled Object files
+*.o
+*.obj
+*.out
+
+# Executable files
+*.exe
+*.app
+*.bin
+
+# Libraries
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.vcxproj.user
+*.sln
+*.code-workspace
+
+# Build directories
+build/
+Debug/
+Release/
+x64/
+x86/
+
+# CMake
+CMakeFiles/
+cmake_build_debug/
+cmake_build_release/
+CMakeCache.txt
+CMakeLists.txt.user
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Dependencies
+*.vcpkg/
+vcpkg_installed/
+
+# Temporary files
+*.tmp
+*.log
+*.pdb
+
+# Python cache
+__pycache__/
+*.pyc
+
+# module files
+magisk/ 

@@ -1,6 +1,7 @@
 from datetime import datetime
 import subprocess
 import random
+import os
 
 now = datetime.now()
 data = now.strftime("%Y%m%d")
@@ -10,7 +11,7 @@ sysroot = "--sysroot=D:/Android-NDK/toolchains/llvm/prebuilt/windows-x86_64/sysr
 cppFlags = "--target=aarch64-linux-android27 -std=c++23 -static -s -O3 -flto -fno-exceptions -ffast-math -funroll-loops -frtti -fexceptions -finline-functions -fomit-frame-pointer -Wall -Wextra -Wshadow -fPIE"
 cppFlags_list = cppFlags.split()
 prop = "./magisk/module.prop"
-Project = "C://Users//Administrator//Desktop//项目//C++开发//CS调度"
+Project = os.path.dirname(os.path.abspath(__file__))
 new_version_code = random.randint(20250308, 20991231)  
 
 def log (LogMessage) :
