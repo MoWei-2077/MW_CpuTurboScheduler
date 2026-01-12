@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Function.hpp"
+#include "controller.hpp"
 
 class Schedule {
 private:
@@ -17,8 +17,10 @@ private:
 
     Function function;
     JsonConfig config;
+    SwitchConfig Mode;
     Logger logger;
     Utils utils;
+    Control control;
 
     mutex FreqWriterMutex;
 
@@ -28,7 +30,7 @@ public:
 
     Schedule() {
         Init();
-        threads.emplace_back(thread(&Schedule::cpuWriterTask, this));
+      //  threads.emplace_back(thread(&Schedule::cpuWriterTask, this));
         threads.emplace_back(thread(&Schedule::configTriggerTask, this));
         threads.emplace_back(thread(&Schedule::jsonTriggerTask, this));
         threads.emplace_back(thread(&Schedule::cpuSetTriggerTask, this));
@@ -79,7 +81,7 @@ public:
         for (int i = 0; i <= 3; i++) {
             for (int j = 1; j <= 12; j++) {
                 if (Policy::CpuPolicy[i] == -1 || config.schedParam[i].Name[j].empty()) continue;
-                FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), config.schedParam[i].Value[j].c_str());
+                FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), config.schedParam[i].Name[j].c_str());
                 utils.FileWrite(temp, config.schedParam[i].Value[j].c_str());
                 logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(config.schedParam[i].Value[j].c_str()));
                 logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(config.schedParam[i].Name[j].c_str()));
@@ -180,6 +182,7 @@ public:
         logger.Info("作者: " + std::string(Meta::author.c_str()));
         logger.Info("日志等级: " + std::string(Meta::loglevel.c_str()));
         function.AllFunC();
+        logger.Info("已启用" + Mode.mode + "模式");
         release();
         SchedParam();
         online();

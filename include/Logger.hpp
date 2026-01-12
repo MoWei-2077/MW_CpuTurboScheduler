@@ -4,7 +4,7 @@
 #include "LibUtils.hpp"
 
 // 配置编译选项 *****************
-#define DEBUG_DURATION 0 
+#define DEBUG_DURATION 0
 // *****************************
 
 enum class LOG_LEVEL : uint8_t { DEBUG, INFO, WARN, ERROR, UNKNOWN };

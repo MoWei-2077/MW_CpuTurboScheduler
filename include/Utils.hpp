@@ -42,6 +42,7 @@ using namespace LibUtils;
 using string_t = qlib::string_t;
 
 using std::atomic;
+using std::stringstream;
 using std::unordered_map;
 using std::lock_guard;
 using std::unique_ptr;
@@ -302,13 +303,17 @@ public:
         return tid;
     }
 
-    int GetProperty(const char* key, char* res) {
-        const prop_info* pi = __system_property_find(key); //如果频繁使用，建议缓存 对应Key的 prop_info
+    int getScreenProperty() {
+        static const prop_info* pi = nullptr;
+
         if (pi == nullptr) {
-            res[0] = 0;
-            return -1;
+            pi = __system_property_find("debug.tracing.screen_state");
+            if (pi == nullptr) {
+                return -1;
+            }
         }
 
+        char res[PROP_VALUE_MAX] = { 0 };
         __system_property_read_callback(pi,
             [](void* cookie, const char*, const char* value, unsigned) {
                 if (value[0])
@@ -317,7 +322,7 @@ public:
             },
             res);
 
-        return res[0] ? 1 : -1;
+        return res[0] ? res[0] - '0' : -1;
     }
 
 

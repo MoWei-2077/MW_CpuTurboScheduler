@@ -90,7 +90,7 @@ class SwitchConfig {
 private:
     static constexpr const char* configPath = "/sdcard/Android/CTS/mode.txt";
 public:
-    std::string mode;
+    inline static std::string mode;
 
     void LoadConfig() {
         ifstream file;
@@ -100,7 +100,14 @@ public:
             fprintf(stderr, "无法打开配置文件: %s\n", configPath);
             return;
         }
-        while (getline(file, temp)) mode = std::move(temp);
+
+        getline(file, temp);
+
+        if (temp.empty()) { fprintf(stderr, "配置文件为空"); return; }
+
+        mode = std::move(temp);
+
         file.close();
     }
+
 }; 
