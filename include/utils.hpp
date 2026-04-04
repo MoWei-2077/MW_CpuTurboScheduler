@@ -29,15 +29,23 @@
 #include <mutex>
 #include <atomic>
 #include <memory>
+#include <format>
 #include "LibUtils.hpp"
+#include "Json/string.hpp"
 
+// 配置编译选项 *****************
+#define DEBUG_DURATION 0
 #define MAX_PKG_LEN 128
 #define MAX_THREAD_LEN 128
 #define CPU_POLICY 8 
+// *****************************
 
 using namespace LibUtils;
 
+using string_t = qlib::string_t;
+
 using std::atomic;
+using std::stringstream;
 using std::unordered_map;
 using std::lock_guard;
 using std::unique_ptr;
@@ -51,6 +59,14 @@ using std::exception;
 using std::make_unique;
 using std::to_string;
 using std::move;
+
+
+enum class LOG_LEVEL : uint32_t { 
+    DEBUG = 0,
+    INFO = 1,
+    WARN = 2, 
+    ERROR = 3, 
+};
 
 class Utils {
 private:
@@ -68,12 +84,11 @@ public:
         if (fd >= 0) {
             write(fd, content, Faststrlen(content));
             close(fd);
-            chmod(filePath, 0444);
         }
     }
     
     void FileWrite(const string& filePath, const string& content) noexcept {
-        int fd = open(filePath.c_str(), O_WRONLY | O_NONBLOCK);
+        int fd = open(filePath.c_str(), O_WRONLY | O_NONBLOCK, 0666);
 
         if (fd < 0) {
             chmod(filePath.c_str(), 0666);
@@ -83,9 +98,24 @@ public:
         if (fd >= 0) {
             write(fd, content.data(), content.size());
             close(fd);
-            chmod(filePath.c_str(), 0444);
         }
     }
+
+        
+    void FileWrite(const char* filePath, const string_t& content) noexcept {
+        int fd = open(filePath, O_WRONLY | O_NONBLOCK, 0666);
+
+        if (fd < 0) {
+            chmod(filePath, 0666);
+            fd = open(filePath, O_WRONLY | O_CREAT | O_NONBLOCK); 
+        }
+
+        if (fd >= 0) {
+            write(fd, content.data(), content.size());
+            close(fd);
+        }
+    }
+
 
     void WriteFile(const char* filePath, const char* content) noexcept {
         int fd = open(filePath, O_WRONLY | O_TRUNC | O_CREAT, 0666); 
@@ -201,7 +231,7 @@ public:
             if (readString(cmdlinePath, readBuff, sizeof(readBuff) - 1) <= 0) continue;
             const char *slash = strrchr(readBuff, '/');
             const char *proc_name = slash ? slash + 1 : readBuff;
-            size_t base_len = Faststrlen(proc_name);
+            long base_len = Faststrlen(proc_name);
 
             if (base_len == Faststrlen(processName) && !memcmp(proc_name, processName, Faststrlen(processName))) {
                 pid = Fastatoi(file->d_name);
@@ -282,13 +312,17 @@ public:
         return tid;
     }
 
-    int GetProperty(const char* key, char* res) {
-        const prop_info* pi = __system_property_find(key); //如果频繁使用，建议缓存 对应Key的 prop_info
+    int getScreenProperty() {
+        static const prop_info* pi = nullptr;
+
         if (pi == nullptr) {
-            res[0] = 0;
-            return -1;
+            pi = __system_property_find("debug.tracing.screen_state");
+            if (pi == nullptr) {
+                return -1;
+            }
         }
 
+        char res[PROP_VALUE_MAX] = { 0 };
         __system_property_read_callback(pi,
             [](void* cookie, const char*, const char* value, unsigned) {
                 if (value[0])
@@ -297,7 +331,7 @@ public:
             },
             res);
 
-        return res[0] ? 1 : -1;
+        return res[0] ? res[0] - '0' : -1;
     }
 
 
@@ -415,10 +449,10 @@ public:
         return string(temp);
     }
 
-    size_t popenRead(const char* cmd, char* buf) {
+    size_t popenRead(const char* cmd, char* buf, size_t len) {
         auto fp = popen(cmd, "r");
         if (!fp) return 0;
-        auto readLen = fread(buf, 1, sizeof(buf), fp);
+        auto readLen = fread(buf, 1, len, fp);
         pclose(fp);
         return readLen;
     }

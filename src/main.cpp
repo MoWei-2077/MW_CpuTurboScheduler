@@ -1,12 +1,8 @@
-#include "JsonConfig.hpp"
-#include "Logger.hpp"
-
+#include "scheduler.hpp"
 
 int main(void) {
-    Logger logger;
-    JsonConfig config;
-    logger.clear_log();
-    if (!config.readConfig()) {
-        return -1;
-    }
+    Schedule sched;
+    while (true) {
+        sleep(3600 * 24 * 365);
+    } 
 }

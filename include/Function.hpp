@@ -21,22 +21,10 @@ private:
     Logger logger;
 public:
     void AllFunC() {
-        cpuctlFunction();
         cpusetFunction();
         disableGpuBoost();
         LoadBanlance();
-        IoSchedOpt();
         CfsSchedOpt();
-    }
-    
-    void cpuctlFunction() {
-        if (!checkCpuctl()) return;
-        utils.FileWrite("/dev/cpuctl/top-app/cpu.uclamp.max", "max");
-        utils.FileWrite("/dev/cpuctl/top-app/cpu.uclamp.min", "0");
-        utils.FileWrite("/dev/cpuctl/foreground/cpu.uclamp.max", "80");
-        utils.FileWrite("/dev/cpuctl/foreground/cpu.uclamp.min", "0");
-        utils.FileWrite("/dev/cpuctl/background/cpu.uclamp.max", "20");
-        utils.FileWrite("/dev/cpuctl/background/cpu.uclamp.min", "0");
     }
     
     void cpusetFunction() {
@@ -104,22 +92,6 @@ public:
         logger.Info("负载均衡已优化完毕");
     }
 
-    void IoSchedOpt() {
-        if (!DisableGpuBoost::enable) return;
-        if (!IO_Optimization::scheduler.empty()) {
-            utils.FileWrite("/sys/block/*/queue/scheduler", IO_Optimization::scheduler);
-        }
-        utils.FileWrite("/sys/block/*/queue/nomerges", IO_Optimization::nomerges);
-        utils.FileWrite("/sys/block/*/queue/iostats", IO_Optimization::iostats);
-        utils.FileWrite("/sys/block/*/queue/read_ahead_kb", IO_Optimization::read_ahead_kb);
-        utils.FileWrite("/sys/block/*/bdi/read_ahead_kb", IO_Optimization::read_ahead_kb);
-        logger.Debug("IO调度器调整为: " + std::string(IO_Optimization::scheduler.c_str()));
-        logger.Debug("nomerges调整为: " + std::string(IO_Optimization::nomerges.c_str()));
-        logger.Debug("iostats调整为: " + std::string(IO_Optimization::iostats.c_str()));
-        logger.Debug("read_ahead_kb调整为: " + std::string(IO_Optimization::read_ahead_kb.c_str()));
-        logger.Info("IO优化完毕");
-    }
-
     void CfsSchedOpt() {
         if (!Scheduler::enable) return;
         utils.FileWrite("/proc/sys/kernel/sched_schedstats", Scheduler::Sched_schedstats ? "1" : "0");
@@ -165,11 +137,11 @@ public:
         }
         return false;
     }
-private:
-    bool checkUfs() const {
-        return (!access(ufsPath, F_OK));
-    }
 
+    bool checkQcom() const {
+        return (!access(qcomGpuPath, F_OK));
+    }
+private:
     bool checkQcomFeas() const {
         return (!access(qcomFeas, F_OK));
     }
@@ -177,19 +149,12 @@ private:
     bool checkMtkFeas() const {
         return (!access(mtkFeas, F_OK));
     }
+
     bool checkCpuset() const {
         return (!access(cpusetPath, F_OK));
     }
-
-    bool checkCpuctl() const {
-        return (!access(cpuctlPath, F_OK));
-    }
-
+    
     bool checkEasSched() const {
         return (!access(easSchedPath, F_OK));
-    }
-
-    bool checkQcom() const {
-        return (!access(qcomGpuPath, F_OK));
     }
 };

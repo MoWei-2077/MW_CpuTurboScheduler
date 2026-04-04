@@ -11,28 +11,45 @@ using namespace qlib;
 class JsonConfig {
 private:
     static constexpr const char* configPath = "/sdcard/Android/CTS/config.json";
+    static constexpr const char* modePath = "/sdcard/Android/CTS/mode.txt";
 
     Logger logger;
     json_view_t json;
-    SwitchConfig config;
-
-    mutex jsonReadMutex;
 
     char buff[256];
     char cluster [64];
 public:
     SchedParam schedParam[4];
+    std::string mode;
 
-    inline bool switchConfig() const {
-        if (config.mode == "powersave" || config.mode == "balance" || config.mode == "performance" || config.mode == "fast") return true;
+    void LoadConfig() {
+        ifstream file;
+        std::string temp; 
+        file.open(modePath);
+        if (!file.is_open()) { 
+            fprintf(stderr, "无法打开配置文件: %s\n", modePath);
+            return;
+        }
+
+        getline(file, temp);
+
+        if (mode == temp) return;
+         
+        mode = std::move(temp);
+        logger.Info("情景模式: " + mode + " 已启用");
+
+        file.close();
+    }
+
+    bool switchConfig() const {
+        if (mode == "powersave" || mode == "balance" || mode == "performance" || mode == "fast") return true;
         
         return false;
     }
 
     bool readConfig() {
-        lock_guard<mutex> lock(jsonReadMutex);
+        LoadConfig();
 
-        config.LoadConfig();
         ifstream ifs(configPath, std::ios::binary);
         if (!ifs) {
             logger.Error("无法打开json配置文件");
@@ -95,35 +112,34 @@ public:
                 logger.Debug("background: " + std::string(Cpuset::background.c_str()));
                 logger.Debug("system_background: " + std::string(Cpuset::system_background.c_str()));
                 logger.Debug("restricted: " + std::string(Cpuset::restricted.c_str()));
-                logger.Debug("---------均衡负载---------");
             #endif
 
-            auto& Boost = json["Function"]["Boost"];
-            Boost::boost_rate_limit_ms = Boost["boost_rate_limit_ms"].get<int>();
+            auto& LaunchBoost = json["Function"]["LaunchBoost"];
+            LaunchBoost::enable = LaunchBoost["enable"].get<bool>();
+            LaunchBoost::boost_rate_limit_ms = LaunchBoost["boost_rate_limit_ms"].get<int>();
             for (int i = 0; i <= 3; i++) {
                 FastSnprintf(buff, sizeof(buff), "c%d", i);
-                auto& BoostFreq = Boost::BoostFreq[i] = Boost["BoostFreq"][buff].get<string_t>();
+                auto& BoostFreq = LaunchBoost::BoostFreq[i] = LaunchBoost["BoostFreq"][buff].get<string_t>();
                 if (BoostFreq.empty()) continue;
         
-            #if DEBUG_DURATION
-                logger.Debug("Boost升频持续时间: " + std::to_string(Boost::boost_rate_limit_ms));
-            #endif
+                #if DEBUG_DURATION
+                    logger.Debug("LaunchBoost开关: " + std::string(LaunchBoost::enable ? "开启" : "关闭"));
+                    logger.Debug("LaunchBoost升频持续时间: " + std::to_string(LaunchBoost::boost_rate_limit_ms));
+                    logger.Debug("LaunchBoost频率: " + std::string(LaunchBoost::BoostFreq));
+                #endif
             }
+
+            auto& officialMode = json["Function"]["OfficialMode"];
+            OfficialMode::enable = officialMode["enable"].get<bool>();
+            #if DEBUG_DURATION
+                logger.Debug("OfficialMode 开关: " + std::string(OfficialMode::enable ? "开启" : "关闭")); 
+            #endif
+            
             auto& LoadBalancing = json["Function"]["LoadBalancing"];
             LoadBanlace::enable = LoadBalancing["enable"].get<bool>();
 
             #if DEBUG_DURATION
                 logger.Debug("LoadBalancing 开关: " + std::string(LoadBanlace::enable ? "开启" : "关闭")); 
-
-                logger.Debug("---------LaunchBoost---------");
-            #endif
-            auto& LaunchBoost = json["Function"]["LaunchBoost"];
-            LaunchBoost::enable = LaunchBoost["enable"].get<bool>();
-
-            #if DEBUG_DURATION
-                logger.Debug("LaunchBoost 开关: " + std::string(LaunchBoost::enable ? "开启" : "关闭"));
-
-                logger.Debug("---------ActivityBoost---------");
             #endif
 
             auto& DisableGpuBoost = json["Function"]["DisableGpuBoost"];
@@ -131,28 +147,7 @@ public:
 
             #if DEBUG_DURATION
                 logger.Debug("DisableGpuBoost 开关: " + std::string(DisableGpuBoost::enable ? "开启" : "关闭"));
-
-                logger.Debug("---------I/O优化---------");
             #endif
-
-            auto& IOOptimization = json["Function"]["IO_Optimization"];
-            IO_Optimization::enable = IOOptimization["enable"].get<bool>();
-            if (!IOOptimization["scheduler"].get<string_t>().empty()) {
-                IO_Optimization::scheduler = IOOptimization["scheduler"].get<string_t>();
-            }
-            IO_Optimization::iostats = IOOptimization["iostats"].get<string_t>();
-            IO_Optimization::nomerges = IOOptimization["nomerges"].get<string_t>();
-            IO_Optimization::read_ahead_kb = IOOptimization["read_ahead_kb"].get<string_t>();
-
-            #if DEBUG_DURATION
-                logger.Debug("IO_Optimization 开关: " + std::string(IO_Optimization::enable ? "开启" : "关闭"));
-                logger.Debug("scheduler: " + std::string(IO_Optimization::scheduler.c_str()));
-                logger.Debug("iostats: " + std::string(IO_Optimization::iostats.c_str()));
-                logger.Debug("nomerges: " + std::string(IO_Optimization::nomerges.c_str()));
-                logger.Debug("read_ahead_kb: " + std::string(IO_Optimization::read_ahead_kb.c_str()));
-
-                logger.Debug("---------调度器优化---------");
-            #endif 
 
             auto& Scheduler = json["Function"]["Scheduler"];
             Scheduler::enable = Scheduler["enable"].get<bool>();
@@ -177,20 +172,18 @@ public:
                 logger.Debug("Sched_nr_migrate: " + std::string(Scheduler::Sched_nr_migrate.c_str()));
                 logger.Debug("Sched_util_clamp_min: " + std::string(Scheduler::Sched_util_clamp_min.c_str()));
                 logger.Debug("Sched_util_clamp_max: " + std::string(Scheduler::Sched_util_clamp_max.c_str()));
-
-                logger.Debug("---------性能模式---------");
             #endif
         } catch (const qlib::exception& e) {
             logger.Error("Function节点异常 错误消息: " + std::string(e.what()));
         }
 
-        if (config.mode.empty()) {
+        if (mode.empty()) {
             logger.Error("情景模式为空 无法读取数据");
             return false;
         }
         
         if (!switchConfig()) {
-            logger.Error("情景模式异常 当前情景模式: " + config.mode);
+            logger.Error("情景模式异常 当前情景模式: " + mode);
             return false;
         }
         
@@ -199,18 +192,18 @@ public:
                 logger.Debug("当前性能模式: " + config.mode);
             #endif
 
-            auto& Switch = json["Switch"][config.mode.c_str()];
+            auto& Switch = json["Switch"][mode.c_str()];
             for (int i = 0; i <= 3; i++) {
                 FastSnprintf(buff, sizeof(buff), "c%d", i);
                 auto& MinFreq = Performances::MinFreq[i] = Switch["MinFreq"][buff].get<string_t>();
                 auto& MaxFreq = Performances::MaxFreq[i] = Switch["MaxFreq"][buff].get<string_t>();
                 auto& CpuGovernor = Performances::CpuGovernor[i] = Switch["governor"][buff].get<string_t>();
                 if (MinFreq.empty() || MaxFreq.empty() || CpuGovernor.empty()) continue;
-            #if DEBUG_DURATION
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " MinFreq: " + std::string(Performances::MinFreq[i].c_str()));
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " MaxFreq: " + std::string(Performances::MaxFreq[i].c_str()));
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " CpuGovernor: " + std::string(Performances::CpuGovernor[i].c_str()));
-            #endif
+                #if DEBUG_DURATION
+                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " MinFreq: " + std::string(Performances::MinFreq[i].c_str()));
+                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " MaxFreq: " + std::string(Performances::MaxFreq[i].c_str()));
+                    logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " CpuGovernor: " + std::string(Performances::CpuGovernor[i].c_str()));
+                #endif
             }
 
             #if DEBUG_DURATION
