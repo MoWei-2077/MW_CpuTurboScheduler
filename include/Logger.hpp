@@ -7,6 +7,9 @@ class Logger {
 private:
     static constexpr const char* logpath = "/sdcard/Android/CTS/log.txt";
 
+    constexpr static int LINE_SIZE = 1024 * 32;   //  32 KiB
+    char lineCache[LINE_SIZE];
+
     LOG_LEVEL logLevel_ = LOG_LEVEL::INFO;
     mutex logPrintMutex;
 public:
@@ -25,19 +28,24 @@ public:
         Log(LOG_LEVEL::ERROR, message);
     }
 
-    void Debug(string message) {
-        Log(LOG_LEVEL::DEBUG, message);
-    } 
-
-    void Info(string message) {
-        Log(LOG_LEVEL::INFO, message);
-    }
-    void Warn(string message) {
-        Log(LOG_LEVEL::WARN, message);
+    template<typename... Args>
+    void Debug(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::DEBUG, message, std::forward<Args>(args)...);
     }
 
-    void Error(string message) {
-        Log(LOG_LEVEL::ERROR, message);
+    template<typename... Args>
+    void Info(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::INFO, message, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void Warn(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::WARN, message, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    void Error(const char* message, Args&&... args) {
+        Log(LOG_LEVEL::ERROR, message, std::forward<Args>(args)...);
     }
 
     void setLogLevel(string_t& level) {
@@ -73,38 +81,40 @@ private:
     int getCurrentTimeStr(char* buf, size_t size) {
         time_t now = time(nullptr);
         struct tm* local_time = localtime(&now);
-        return strftime(buf, size, "%Y-%m-%d %H:%M:%S", local_time);
+        return strftime(buf, size, "%Y-%m-%d %H:%M:%S ", local_time);
     }
 
     void Log(LOG_LEVEL level, const char* message) {
         lock_guard<mutex> lock(logPrintMutex);
 
         if (level >= logLevel_) {
-            char buff[200];
-
-            int len = getCurrentTimeStr(buff, sizeof(buff));
-            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message);
+            int len = getCurrentTimeStr(lineCache, sizeof(lineCache));
+            len += FastSnprintf(lineCache + len, sizeof(lineCache) - len, "%s %s\n", levelStrings.at(level), message);
 
             #if DEBUG_DURATION
-                printf("%s\n", buff);
+                printf("%s\n", lineCache);
             #endif
-            toFile(buff, len);
+            toFile(lineCache, len);
         }
     }
 
-    void Log(LOG_LEVEL level, const string message) {
+    template<typename... Args>
+    void Log(LOG_LEVEL level, const char* message, Args&&... args) {
         lock_guard<mutex> lock(logPrintMutex);
 
-        if (level >= logLevel_) {
-            char buff[200];
-            int len = getCurrentTimeStr(buff, sizeof(buff));
-            len += FastSnprintf(buff + len, sizeof(buff) - len, " %s %s\n", levelStrings.at(level), message.c_str());
+        if (level >= logLevel_) {    
+            int len = getCurrentTimeStr(lineCache, sizeof(lineCache));
+
+            len += snprintf(lineCache + len, sizeof(lineCache) - len, message, std::forward<Args>(args)...) + len;
+            lineCache[len++] = '\n';
+
             #if DEBUG_DURATION
-                printf("%s\n", buff);
+                printf("%s\n", lineCache);
             #endif
-            toFile(buff, len);
+            toFile(lineCache, len);
         }
     }
+
 
     inline static const unordered_map<LOG_LEVEL, const char*> levelStrings = {
         {LOG_LEVEL::DEBUG, "调试 ->"},

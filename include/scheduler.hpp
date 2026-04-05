@@ -37,16 +37,15 @@ public:
     void FreqWriter(const int Policy, const string_t MinFreq, const string_t MaxFreq, const string_t Governor) {
         FastSnprintf(temp, sizeof(temp), MinFreqPath, Policy);
         utils.FileWrite(temp, MinFreq);
-
-        logger.Debug("CPU簇" + std::to_string(Policy) + "最小频率: " + std::string(MinFreq.c_str()));
+        logger.Debug("CPU簇: %d 最小频率: %s", Policy, MinFreq.c_str());
 
         FastSnprintf(temp, sizeof(temp), MaxFreqPath, Policy);
         utils.FileWrite(temp, MaxFreq);
-        logger.Debug("CPU簇" + std::to_string(Policy) + "最大频率: " + std::string(MaxFreq.c_str()));
+        logger.Debug("CPU簇: %d 最大频率: %s", Policy, MaxFreq.c_str());
 
         FastSnprintf(temp, sizeof(temp), GovernorPath, Policy);
         utils.FileWrite(temp, Governor);
-        logger.Debug("CPU簇" + std::to_string(Policy) + "调速器: " + std::string(Governor.c_str()));
+        logger.Debug("CPU簇: %d 调速器: %s", Policy, Governor.c_str());
     }
 
     void release() {
@@ -82,7 +81,7 @@ reset:
         for (int i = 0; i <= 7; i++) {
             FastSnprintf(temp, sizeof(temp), onlinePath, i);
             utils.WriteInt(temp, Performances::Online[i]);
-            logger.Debug("核心" + std::to_string(i) + ": " + (Performances::Online[i] ? "开启" : "关闭"));
+            logger.Debug("核心: %d %s", i, Performances::Online[i] ? "开启" : "关闭");
         }
     }
 
@@ -92,8 +91,7 @@ reset:
                 if (Policy::CpuPolicy[i] == -1 || conf.schedParam[i].Name[j].empty()) continue;
                 FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), conf.schedParam[i].Name[j].c_str());
                 utils.FileWrite(temp, conf.schedParam[i].Value[j].c_str());
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 值: " + std::string(conf.schedParam[i].Value[j].c_str()));
-                logger.Debug("CPU簇 " + std::to_string(Policy::CpuPolicy[i]) + " 调速器参数 " + std::to_string(j) + " 名称: " + std::string(conf.schedParam[i].Name[j].c_str()));
+                logger.Debug("CPU簇: %d 调速器参数: %d 名称: %s 值: %d", Policy::CpuPolicy[i], j, conf.schedParam[i].Name[j].c_str(), conf.schedParam[i].Value[j].c_str());
             }
         }
     }
@@ -163,11 +161,8 @@ reset:
         auto ptr = strchr(buf, ' ');
 
         if (ptr) {
-            char tips[256];
-            FastSnprintf(tips, sizeof(tips), 
-            "CTS调度已经在运行(pid: %s), 当前进程(pid:%d)即将退出", buf, getpid());
-            logger.Error(tips);
-            printf("\n!!! \n!!! %s\n!!!\n\n", tips);
+            logger.Error("CTS调度已经在运行(pid: %s), 当前进程(pid:%d)即将退出", buf, getpid());
+            printf("\n!!! \n!!! CTS调度已经在运行(pid: %s), 当前进程(pid:%d)即将退出 \n!!!\n\n", buf, getpid());
             exit(-1);
         }
 
@@ -175,10 +170,10 @@ reset:
         conf.readConfig();
 
         logger.setLogLevel(Meta::loglevel);
-        logger.Info("名称: " + std::string(Meta::name.c_str()));
-        logger.Info("版本: " + std::to_string(Meta::version));
-        logger.Info("作者: " + std::string(Meta::author.c_str()));
-        logger.Info("日志等级: " + std::string(Meta::loglevel.c_str()));
+        logger.Info("名称: %s", Meta::name.c_str());
+        logger.Info("版本: %d", Meta::version);
+        logger.Info("作者: %s", Meta::author.c_str());
+        logger.Info("日志等级: %s", Meta::loglevel.c_str());
         function.AllFunC();
         release();
         online();
