@@ -32,11 +32,7 @@ public:
         }
 
         getline(file, temp);
-
-        if (mode == temp) return;
-         
         mode = std::move(temp);
-        logger.Info("情景模式: %s 已启用", mode.c_str());
 
         file.close();
     }
@@ -48,8 +44,6 @@ public:
     }
 
     bool readConfig() {
-        LoadConfig();
-
         ifstream ifs(configPath, std::ios::binary);
         if (!ifs) {
             logger.Error("无法打开json配置文件");
@@ -176,6 +170,8 @@ public:
             logger.Error("Function节点异常 错误消息: %d", e.what());
         }
 
+        LoadConfig();
+
         if (mode.empty()) {
             logger.Error("情景模式为空 无法读取数据");
             return false;
@@ -226,18 +222,18 @@ public:
                 FastSnprintf(cluster, sizeof(cluster), "c%d", i);
                 for (int j = 1; j <= 12; j++) {
                     FastSnprintf(buff, sizeof(buff), "Path%d", j);
-
                     auto name = Switch["SchedParam"][cluster][buff].get<string_t>();
-                    auto value = Switch["SchedParam"][cluster][buff].get<string_t>();
-                    if (name.empty() || value.empty()) continue;
-
-                    schedParam[i].Name[j] = name;
+                    if(name.empty()) continue;
 
                     FastSnprintf(buff, sizeof(buff), "value%d", j);
+                    auto value = Switch["SchedParam"][cluster][buff].get<string_t>();
+                    if (value.empty()) continue;
+
+                    schedParam[i].Name[j] = name;
                     schedParam[i].Value[j] = value;
 
                     #if DEBUG_DURATION
-                        logger.Debug("CPU簇: %d 调速器参数: %d 名称: %s 值: %d", 
+                        logger.Debug("CPU簇: %d 调速器参数: %d 名称: %s 值: %s", 
                             Policy::CpuPolicy[i], j, schedParam[i].Name[j].c_str(), 
                                 schedParam[i].Value[j].c_str());
                     #endif

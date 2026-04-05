@@ -48,33 +48,43 @@ public:
         logger.Debug("CPU簇: %d 调速器: %s", Policy, Governor.c_str());
     }
 
-    void release() {
-        if (cpuBoost) 
-            goto boost;
-        else if (conf.mode == "fast" && OfficialMode::enable)
-            goto reset;
-        else 
-            goto release;
-boost:
+    void Boost() {
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], LaunchBoost::BoostFreq[i], Performances::CpuGovernor[i]);
+            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], 
+                    LaunchBoost::BoostFreq[i], Performances::CpuGovernor[i]);
             utils.sleep_ms(LaunchBoost::boost_rate_limit_ms);
-            goto release;
-        }  
-        cpuBoost = false;
-release: 
+        }
+    }
+
+    void Release() {
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], Performances::MaxFreq[i], Performances::CpuGovernor[i]);
-        } 
+            FreqWriter(Policy::CpuPolicy[i], Performances::MinFreq[i], 
+                    Performances::MaxFreq[i], Performances::CpuGovernor[i]);
+        }
         function.FeasFunc(false);
-reset: 
+    }
+
+    void Reset() {
         for (int i = 0; i <= 3; i++) {
             if (Policy::CpuPolicy[i] == -1) continue;
-            FreqWriter(Policy::CpuPolicy[i], "0", "2147483647", function.checkQcom() ? "walt" : "sugov_ext");
-        } 
+            FreqWriter(Policy::CpuPolicy[i], "0", "2147483647", 
+                    function.checkQcom() ? "walt" : "sugov_ext");
+        }
         function.FeasFunc(true);
+    }
+
+    void release() {
+        logger.Info("情景模式: %s 已启用", conf.mode.c_str());
+        if (cpuBoost) {
+            Boost();
+            cpuBoost = false;
+        } else if (conf.mode == "fast" && OfficialMode::enable) {
+            Reset();
+        } else {
+            Release();
+        }
     }
 
     void online() {
@@ -91,7 +101,7 @@ reset:
                 if (Policy::CpuPolicy[i] == -1 || conf.schedParam[i].Name[j].empty()) continue;
                 FastSnprintf(temp, sizeof(temp), SchedParamPath, Policy::CpuPolicy[i], Performances::CpuGovernor[i].c_str(), conf.schedParam[i].Name[j].c_str());
                 utils.FileWrite(temp, conf.schedParam[i].Value[j].c_str());
-                logger.Debug("CPU簇: %d 调速器参数: %d 名称: %s 值: %d", Policy::CpuPolicy[i], j, conf.schedParam[i].Name[j].c_str(), conf.schedParam[i].Value[j].c_str());
+                logger.Debug("CPU簇: %d 调速器参数: %d 名称: %s 值: %s", Policy::CpuPolicy[i], j, conf.schedParam[i].Name[j].c_str(), conf.schedParam[i].Value[j].c_str());
             }
         }
     }
@@ -99,7 +109,7 @@ reset:
     void configTriggerTask() {
         sleep(2);
         while (true) {
-            utils.InotifyMain(configPath, IN_MODIFY);
+            utils.InotifyMain(configPath, IN_CLOSE_WRITE);
             conf.readConfig();
             release();
             SchedParam();
@@ -110,8 +120,9 @@ reset:
     void jsonTriggerTask() {
         sleep(2);
         while (true) {
-            utils.InotifyMain(jsonPath, IN_MODIFY);
+            utils.InotifyMain(jsonPath, IN_CLOSE_WRITE);
             conf.readConfig();
+            logger.setLogLevel(Meta::loglevel);
             function.AllFunC();
         }
     }
@@ -168,7 +179,6 @@ reset:
 
         logger.clear_log();
         conf.readConfig();
-
         logger.setLogLevel(Meta::loglevel);
         logger.Info("名称: %s", Meta::name.c_str());
         logger.Info("版本: %d", Meta::version);

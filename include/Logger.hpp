@@ -65,18 +65,19 @@ public:
             fprintf(stderr, "ERROR:清理日志文件失败");
             return;
         }
+        fclose(temp);
     }
 
 private:
-    void toFile(const char* logStr, const int len) {
-        auto fp = fopen(logpath, "ab");
-        if (!fp) {
-            fprintf(stderr, "日志输出(追加模式)失败 [%d][%s]", errno, strerror(errno));
-            return;
+    void WriteFile(const char* content, const int len) noexcept {
+        int fd = open(logpath, O_WRONLY | O_APPEND | O_CREAT, 0666); 
+
+        if (fd >= 0) {
+            write(fd, content, len);
+            close(fd);
         }
-        fwrite(logStr, 1, len, fp);
-        fclose(fp);
     }
+
 
     int getCurrentTimeStr(char* buf, size_t size) {
         time_t now = time(nullptr);
@@ -94,7 +95,7 @@ private:
             #if DEBUG_DURATION
                 printf("%s\n", lineCache);
             #endif
-            toFile(lineCache, len);
+            WriteFile(lineCache, len);
         }
     }
 
@@ -103,15 +104,24 @@ private:
         lock_guard<mutex> lock(logPrintMutex);
 
         if (level >= logLevel_) {    
-            int len = getCurrentTimeStr(lineCache, sizeof(lineCache));
+            const int prefixLen = getCurrentTimeStr(lineCache, sizeof(lineCache));
 
-            len += snprintf(lineCache + len, sizeof(lineCache) - len, message, std::forward<Args>(args)...) + len;
+            int len = prefixLen + FastSnprintf(lineCache + prefixLen, sizeof(lineCache) - prefixLen, "%s ", levelStrings.at(level));
+
+            len += snprintf(lineCache + len, sizeof(lineCache) - len, message, std::forward<Args>(args)...);
+
+            if (len <= prefixLen || (size_t)len >= sizeof(lineCache) - 1) {
+                lineCache[prefixLen] = '\0';
+                fprintf(stderr, "日志异常: len[%d] lineCache[%s]\n", len, lineCache);
+                return;
+            }
+
             lineCache[len++] = '\n';
 
             #if DEBUG_DURATION
                 printf("%s\n", lineCache);
             #endif
-            toFile(lineCache, len);
+            WriteFile(lineCache, len);
         }
     }
 
